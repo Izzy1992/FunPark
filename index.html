@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Izmi Family Resort Vacation Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #2B2D42;
+            --pink: #FF7597;
+            --yellow: #FFD166;
+            --teal: #06D6A0;
+            --blue: #118AB2;
+            --cream: #FFFDF7;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1c2c;
+            font-family: 'Nunito', sans-serif;
+            color: var(--ink);
+        }
+        h1, h2, h3, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        .cel-panel {
+            background: rgba(255, 253, 247, 0.94);
+            border: 3px solid var(--ink);
+            box-shadow: 0 4px 0 var(--ink);
+            border-radius: 18px;
+            backdrop-filter: blur(6px);
+        }
+        .cel-btn {
+            border: 2.5px solid var(--ink);
+            box-shadow: 0 3px 0 var(--ink);
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s;
+            cursor: pointer;
+        }
+        .cel-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 var(--ink);
+        }
+        .cel-btn.active {
+            background-color: var(--yellow);
+            transform: translateY(1px);
+            box-shadow: 0 2px 0 var(--ink);
+        }
+        .portrait-ring {
+            border: 3px solid var(--ink);
+            box-shadow: 0 3px 0 var(--ink);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .portrait-ring.selected {
+            border-color: #FF595E;
+            box-shadow: 0 0 0 3px var(--yellow), 0 4px 0 var(--ink);
+            transform: translateY(-4px) scale(1.06);
+        }
+        /* Custom scrollbar hiding */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Main Interactive Simulation Canvas -->
+    <canvas id="simCanvas"></canvas>
+
+    <!-- Top-Left & Top-Right HUD -->
+    <div id="hudLayer" class="fixed inset-0 pointer-events-none flex flex-col justify-between p-3 sm:p-5 z-10">
+        
+        <!-- Top Bar -->
+        <div class="flex flex-wrap items-start justify-between gap-2">
+            
+            <!-- Clock, Day & Speed Panel -->
+            <div class="cel-panel px-3 py-2 sm:px-4 sm:py-2.5 pointer-events-auto flex items-center gap-3">
+                <!-- Mini Analog Sun/Moon Dial -->
+                <div id="skyDial" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-[#2B2D42] flex items-center justify-center bg-sky-200 shadow-inner relative overflow-hidden shrink-0">
+                    <span id="skyIcon" class="text-xl sm:text-2xl">☀️</span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="clockText" class="font-display text-lg sm:text-2xl font-bold tracking-tight text-[#2B2D42]">09:00 AM</span>
+                        <span id="periodBadge" class="text-[10px] sm:text-xs font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#FFD166] border border-[#2B2D42]">Daytime</span>
+                    </div>
+                    <div id="dayText" class="text-xs sm:text-sm font-bold text-slate-600">Day 1 - Monday</div>
+                </div>
+
+                <!-- Speed Controls -->
+                <div class="hidden sm:flex items-center gap-1 ml-2 pl-3 border-l-2 border-slate-200">
+                    <button onclick="setSpeed(0)" id="spd-0" class="cel-btn bg-white px-2.5 py-1 rounded-xl text-xs font-extrabold" title="Pause">⏸</button>
+                    <button onclick="setSpeed(1)" id="spd-1" class="cel-btn active px-2.5 py-1 rounded-xl text-xs font-extrabold">1x</button>
+                    <button onclick="setSpeed(2)" id="spd-2" class="cel-btn bg-white px-2.5 py-1 rounded-xl text-xs font-extrabold">2x</button>
+                    <button onclick="setSpeed(4)" id="spd-4" class="cel-btn bg-white px-2.5 py-1 rounded-xl text-xs font-extrabold">4x</button>
+                </div>
+            </div>
+
+            <!-- Right Controls: Mobile Speed + Audio + Camera Reset + Replay Intro -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <!-- Compact Speed Toggle for Mobile -->
+                <button onclick="cycleSpeedMobile()" id="mobileSpeedBtn" class="sm:hidden cel-btn bg-[#FFD166] px-3 py-2 rounded-2xl text-xs font-extrabold">
+                    1x ⚡
+                </button>
+
+                <!-- Camera Free/Center Button -->
+                <button onclick="unlockCamera()" id="freeCamBtn" class="cel-btn bg-white px-3 py-2 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center gap-1.5" title="Overview Camera">
+                    <span>🗺️</span> <span class="hidden md:inline">Resort View</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button onclick="toggleAudio()" id="audioBtn" class="cel-btn bg-white px-3 py-2 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center gap-1.5">
+                    <span id="audioIcon">🔇</span> <span class="hidden md:inline" id="audioLabel">Sound Off</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Middle Active Character Inspector Pill (appears when following a family member) -->
+        <div id="inspectorPill" class="hidden self-start mt-2 cel-panel px-3.5 py-2.5 pointer-events-auto max-w-xs sm:max-w-sm transition-all">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div id="inspAvatar" class="w-9 h-9 rounded-full border-2 border-[#2B2D42] flex items-center justify-center text-lg bg-pink-100 shrink-0">👨</div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span id="inspName" class="font-display font-bold text-base text-[#2B2D42]">Izmi</span>
+                            <span id="inspAge" class="text-[11px] font-bold px-1.5 py-0.2 bg-slate-100 rounded-md border border-slate-300">34y</span>
+                        </div>
+                        <div id="inspAction" class="text-xs font-bold text-[#118AB2] truncate max-w-[180px] sm:max-w-[220px]">Walking near the pool...</div>
+                    </div>
+                </div>
+                <button onclick="unlockCamera()" class="text-xs font-extrabold bg-slate-100 hover:bg-slate-200 border border-[#2B2D42] rounded-lg px-2 py-1">✕</button>
+            </div>
+            <!-- Needs Bars -->
+            <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200 text-[10px] font-extrabold">
+                <div>
+                    <div class="flex justify-between mb-0.5"><span>⚡ Energy</span><span id="barEnergyVal">85%</span></div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-[#2B2D42]">
+                        <div id="barEnergy" class="h-full bg-[#06D6A0] transition-all duration-300" style="width: 85%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-0.5"><span>🎢 Fun</span><span id="barFunVal">90%</span></div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-[#2B2D42]">
+                        <div id="barFun" class="h-full bg-[#FFD166] transition-all duration-300" style="width: 90%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-0.5"><span>🍦 Hunger</span><span id="barHungerVal">75%</span></div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-[#2B2D42]">
+                        <div id="barHunger" class="h-full bg-[#FF7597] transition-all duration-300" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Collapsible Character Dock -->
+        <div class="flex flex-col items-center pointer-events-none mt-auto">
+            <!-- Collapse / Expand Toggle Tab -->
+            <button onclick="toggleDock()" id="dockToggleBtn" class="cel-btn bg-[#FFFDF7] px-4 py-1 rounded-t-2xl border-b-0 text-xs font-extrabold pointer-events-auto flex items-center gap-1.5 -mb-0.5 z-10">
+                <span id="dockToggleIcon">▼</span> <span id="dockToggleText">Family Tracker</span>
+            </button>
+
+            <!-- Dock Container -->
+            <div id="characterDock" class="cel-panel px-3 py-2.5 sm:px-5 sm:py-3 pointer-events-auto flex items-center gap-3 sm:gap-5 transition-all duration-300">
+                <!-- Portraits populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Arrival Intro Overlay (Day 1 Start) -->
+    <div id="introOverlay" class="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between p-5 sm:p-8">
+        <div class="self-center cel-panel px-6 py-3 text-center bg-[#FFFDF7]/95 mt-4">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-[#FF7597]">5-Day Family Getaway</div>
+            <h1 class="font-display text-2xl sm:text-4xl font-bold text-[#2B2D42]">Tropical Haven Resort</h1>
+            <p id="introSubtitle" class="text-xs sm:text-sm font-bold text-slate-600 mt-1">Arriving at the resort gates with Izmi, Anis, Isaac & Hayyan...</p>
+        </div>
+        <div class="self-end pointer-events-auto">
+            <button onclick="skipIntro()" class="cel-btn bg-[#FFD166] hover:bg-[#ffc436] px-5 py-2.5 rounded-2xl font-display font-bold text-sm sm:text-base text-[#2B2D42]">
+                Skip Intro ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- Departure / End of Vacation Summary Modal (Day 5 Evening) -->
+    <div id="departureModal" class="hidden fixed inset-0 z-40 bg-[#2B2D42]/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="cel-panel max-w-md w-full p-6 text-center bg-[#FFFDF7] animate-bounce-once">
+            <div class="text-5xl mb-2">🧳🌅</div>
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-[#2B2D42]">What a Wonderful Holiday!</h2>
+            <p class="text-sm font-bold text-slate-600 mt-2">
+                Friday evening has arrived! Izmi, Anis, Isaac, and Hayyan are packing their bags with happy memories from Tropical Haven Resort.
+            </p>
+            <div id="vacationStats" class="grid grid-cols-2 gap-2.5 my-4 text-left bg-amber-50 p-3.5 rounded-2xl border-2 border-[#2B2D42] text-xs font-extrabold">
+                <div>🎢 Coaster Rides: <span id="statCoaster" class="text-[#118AB2]">0</span></div>
+                <div>💦 Water Slides: <span id="statSlides" class="text-[#06D6A0]">0</span></div>
+                <div>🍦 Treats Eaten: <span id="statFood" class="text-[#FF7597]">0</span></div>
+                <div>💬 Family Chats: <span id="statChats" class="text-amber-600">0</span></div>
+            </div>
+            <button onclick="restartVacation()" class="cel-btn w-full bg-[#06D6A0] hover:bg-[#05c090] py-3 rounded-2xl font-display font-bold text-lg text-[#2B2D42]">
+                Start Another 5-Day Vacation! 🔄
+            </button>
+        </div>
+    </div>
+
+<script>
+/**
+ * ============================================================================
+ * IZMI FAMILY RESORT VACATION SIMULATION ENGINE
+ * Architecture:
+ * - World Map & Zones (Hotel, Waterpark & Lazy River, Theme Park & Coaster, Ferris Wheel, Cable Car, Food Plaza, Beach)
+ * - Autonomous Needs-Based AI (Energy, Fun, Hunger, Social + Personality Quirks)
+ * - Dynamic Day/Night Cycle (7AM-7PM Sunny Cel-Shaded | 7PM-7AM Neon Carnival)
+ * - Procedural Web Audio Synthesizer (BGM + Contextual SFX)
+ * - Responsive Camera System (Pinch/Wheel Zoom, Pan, Smooth Character Follow)
+ * ============================================================================
+ */
+
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+
+// World Dimensions (Large vibrant resort canvas)
+const WORLD_W = 2400;
+const WORLD_H = 1500;
+
+// Game State
+const sim = {
+    mode: 'INTRO', // 'INTRO', 'PLAYING', 'DEPARTURE'
+    introProgress: 0,
+    speed: 1,
+    day: 1, // 1 = Monday ... 5 = Friday
+    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    timeMinutes: 8 * 60 + 30, // Start at 8:30 AM
+    isNight: false,
+    nightFactor: 0, // 0 = full day, 1 = full neon night
+    selectedCharId: null,
+    dockMinimized: false,
+    camera: {
+        x: 650,
+        y: 650,
+        zoom: 0.85,
+        targetX: 650,
+        targetY: 650,
+        targetZoom: 0.85,
+        isDragging: false,
+        dragStartX: 0,
+        dragStartY: 0
+    },
+    stats: {
+        coasterRides: 0,
+        waterSlides: 0,
+        foodEaten: 0,
+        familyChats: 0
+    },
+    coaster: {
+        progress: 0,
+        riders: []
+    },
+    ferris: {
+        angle: 0
+    },
+    cableCar: {
+        t: 0,
+        dir: 1
+    },
+    particles: [],
+    trashItems: [],
+    clouds: []
+};
+
+// Resort Zones & Interactive Nodes
+const ZONES = {
+    hotel: { id: 'hotel', name: 'Wonderland Resort Hotel', x: 430, y: 420, doorX: 430, doorY: 560 },
+    pool: { id: 'pool', name: 'Lagoon Swimming Pool', x: 960, y: 690, w: 340, h: 200 },
+    slideTop: { id: 'slideTop', name: 'Aqua Racer Slide', x: 800, y: 460 },
+    slidePool: { id: 'slidePool', name: 'Splash Landing', x: 860, y: 640 },
+    coasterStation: { id: 'coasterStation', name: 'Dragon Coaster', x: 1620, y: 500 },
+    ferrisWheel: { id: 'ferrisWheel', name: 'Sunny Ferris Wheel', x: 2040, y: 460 },
+    cableStationA: { id: 'cableStationA', name: 'West Cable Station', x: 560, y: 240 },
+    cableStationB: { id: 'cableStationB', name: 'East Mountain Station', x: 1920, y: 220 },
+    foodStall: { id: 'foodStall', name: 'Ice Cream & Snacks', x: 1320, y: 530 },
+    bench1: { id: 'bench1', name: 'Palm Plaza Bench', x: 1180, y: 560 },
+    bench2: { id: 'bench2', name: 'Promenade Bench', x: 1480, y: 840 },
+    beach: { id: 'beach', name: 'Sunny Sand Beach', x: 980, y: 1220 },
+    playground: { id: 'playground', name: 'Kids Adventure Castle', x: 560, y: 880 }
+};
+
+// ============================================================================
+// PROCEDURAL WEB AUDIO ENGINE (Music & Sound Effects)
+// ============================================================================
+class SoundEngine {
+    constructor() {
+        this.ctx = null;
+        this.enabled = false;
+        this.bgmTimer = null;
+        this.noteIndex = 0;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        if (this.enabled) {
+            this.init();
+            this.startBGM();
+            this.playChime();
+        } else {
+            this.stopBGM();
+        }
+        return this.enabled;
+    }
+
+    startBGM() {
+        if (this.bgmTimer) clearInterval(this.bgmTimer);
+        // Cheerful tropical marimba / gentle night lullaby sequencer
+        const dayMelody = [523.25, 659.25, 783.99, 659.25, 880.00, 783.99, 659.25, 587.33]; // C5 E5 G5 E5 A5 G5 E5 D5
+        const nightMelody = [392.00, 493.88, 587.33, 493.88, 329.63, 392.00, 493.88, 392.00]; // G4 B4 D5 B4 E4 G4 B4 G4
+
+        this.bgmTimer = setInterval(() => {
+            if (!this.enabled || sim.speed === 0 || !this.ctx) return;
+            const scale = sim.isNight ? nightMelody : dayMelody;
+            const freq = scale[this.noteIndex % scale.length];
+            this.noteIndex++;
+
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = sim.isNight ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+            gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(sim.isNight ? 0.03 : 0.045, this.ctx.currentTime + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.45);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.48);
+        }, 550);
+    }
+
+    stopBGM() {
+        if (this.bgmTimer) {
+            clearInterval(this.bgmTimer);
+            this.bgmTimer = null;
+        }
+    }
+
+    playSplash() {
+        if (!this.enabled || !this.ctx) return;
+        const bufferSize = this.ctx.sampleRate * 0.35;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.12));
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(900, this.ctx.currentTime);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+    }
+
+    playChime() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime + 0.09);
+
+        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.32);
+    }
+
+    playCoasterWhoosh() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(320, this.ctx.currentTime + 0.3);
+        osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.7);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(600, this.ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.72);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.75);
+    }
+}
+
+const audio = new SoundEngine();
+
+// ============================================================================
+// CHARACTERS: THE IZMI FAMILY & AMBIENT / CONTEXTUAL NPCs
+// ============================================================================
+const FAMILY = [
+    {
+        id: 'izmi',
+        name: 'Izmi',
+        role: 'Dad',
+        age: 34,
+        skin: '#C6865A', // Warm Malaysian tan
+        hair: '#1E1E24',
+        shirt: '#2A9D8F',
+        pants: '#E9C46A',
+        glasses: true,
+        beard: true,
+        heightScale: 1.08,
+        x: 420,
+        y: 590,
+        targetX: 900,
+        targetY: 620,
+        speed: 85,
+        energy: 92,
+        fun: 75,
+        hunger: 80,
+        state: 'WALKING', // WALKING, SWIMMING, SLIDING, COASTER, EATING, RESTING, SLEEPING, PLAYING_TAG
+        stateTimer: 0,
+        actionLabel: 'Exploring the resort!',
+        speech: 'Welcome to paradise, family! 📸',
+        speechTimer: 5,
+        walkCycle: 0,
+        facing: 1,
+        emoji: '👨'
+    },
+    {
+        id: 'anis',
+        name: 'Anis',
+        role: 'Mom',
+        age: 31,
+        skin: '#D4956A', // Warm tan
+        hijab: '#FF9EBB', // Cute pastel pink Muslimah hijab
+        dress: '#FF7597', // Pink & yellow floral long-sleeved dress (no hand socks)
+        dressAccent: '#FFD166',
+        heightScale: 1.0,
+        x: 455,
+        y: 595,
+        targetX: 940,
+        targetY: 630,
+        speed: 80,
+        energy: 90,
+        fun: 78,
+        hunger: 82,
+        state: 'WALKING',
+        stateTimer: 0,
+        actionLabel: 'Admiring the tropical view',
+        speech: 'Look how happy the boys are! 🌸',
+        speechTimer: 6,
+        walkCycle: 1.2,
+        facing: 1,
+        emoji: '🧕'
+    },
+    {
+        id: 'isaac',
+        name: 'Isaac',
+        role: 'Son (5)',
+        age: 5,
+        skin: '#C98A5E',
+        hair: '#1E1E24',
+        shirt: '#3A86FF',
+        pants: '#FFBE0B',
+        sidePart: true,
+        heightScale: 0.76,
+        x: 440,
+        y: 615,
+        targetX: 820,
+        targetY: 500,
+        speed: 105,
+        energy: 98,
+        fun: 85,
+        hunger: 75,
+        state: 'WALKING',
+        stateTimer: 0,
+        actionLabel: 'Heading to the water slides!',
+        speech: 'Yay! Waterpark time!! 💦',
+        speechTimer: 5,
+        walkCycle: 2.1,
+        facing: 1,
+        emoji: '👦'
+    },
+    {
+        id: 'hayyan',
+        name: 'Hayyan',
+        role: 'Son (4)',
+        age: 4,
+        skin: '#CE9165',
+        hair: '#24201E',
+        shirt: '#FF595E',
+        pants: '#06D6A0',
+        tousledHair: true,
+        heightScale: 0.70,
+        x: 470,
+        y: 620,
+        targetX: 1050,
+        targetY: 650,
+        speed: 120,
+        energy: 100,
+        fun: 92,
+        hunger: 78,
+        state: 'WALKING',
+        stateTimer: 0,
+        actionLabel: 'Zooming around excitedly!',
+        speech: 'Weeee! Catch me!! 🚀',
+        speechTimer: 5.5,
+        walkCycle: 0.5,
+        facing: 1,
+        emoji: '🧒'
+    }
+];
+
+// Contextual & Ambient NPCs
+const NPCS = [];
+
+function initNPCs() {
+    NPCS.length = 0;
+    // 1. Groundskeeper (sweeps litter, quiet & focused on duties)
+    NPCS.push({
+        id: 'keeper1',
+        type: 'KEEPER',
+        name: 'Uncle Sam (Staff)',
+        skin: '#9E6B43',
+        shirt: '#06D6A0',
+        pants: '#2B2D42',
+        hat: '#FFD166',
+        x: 1100,
+        y: 600,
+        targetX: 1300,
+        targetY: 600,
+        speed: 55,
+        walkCycle: 0,
+        facing: 1,
+        speech: '',
+        speechTimer: 0
+    });
+
+    // 2. Ice Cream / Snack Vendor
+    NPCS.push({
+        id: 'vendor1',
+        type: 'VENDOR',
+        name: 'Chef Mira',
+        skin: '#D69A6C',
+        shirt: '#FFFFFF',
+        pants: '#FF7597',
+        hat: '#FFFFFF',
+        x: 1320,
+        y: 505,
+        targetX: 1320,
+        targetY: 505,
+        speed: 0,
+        walkCycle: 0,
+        facing: 1,
+        speech: 'Fresh mango ice cream! 🍦',
+        speechTimer: 4
+    });
+
+    // 3. Friendly Resting Family on Bench (Contextual chat when Izmi/Anis rest nearby)
+    NPCS.push({
+        id: 'guestBench1',
+        type: 'BENCH_GUEST',
+        name: 'Aisha (Guest)',
+        skin: '#C48458',
+        shirt: '#9B5DE5',
+        pants: '#F15BB5',
+        x: 1165,
+        y: 555,
+        targetX: 1165,
+        targetY: 555,
+        speed: 0,
+        state: 'SITTING',
+        walkCycle: 0,
+        facing: 1,
+        speech: '',
+        speechTimer: 0,
+        chatCooldown: 0
+    });
+
+    // 4. Generic Resort Visitors (Roamers & Swimmers)
+    const guestColors = ['#F72585', '#4CC9F0', '#F8961E', '#90BE6D', '#577590', '#B5179E'];
+    for (let i = 0; i < 10; i++) {
+        const isSwimmer = i < 3;
+        NPCS.push({
+            id: `guest_${i}`,
+            type: 'VISITOR',
+            skin: i % 2 === 0 ? '#D4956A' : '#8D5524',
+            shirt: guestColors[i % guestColors.length],
+            pants: '#3D405B',
+            x: isSwimmer ? (850 + i * 70) : (600 + i * 140),
+            y: isSwimmer ? (680 + (i % 2) * 50) : (620 + (i % 3) * 160),
+            targetX: isSwimmer ? 1050 : 1200,
+            targetY: isSwimmer ? 700 : 750,
+            speed: 50 + (i % 3) * 12,
+            state: isSwimmer ? 'SWIMMING' : 'WALKING',
+            walkCycle: i,
+            facing: 1,
+            speech: '',
+            speechTimer: 0
+        });
+    }
+}
+
+// Initialize Clouds & Initial Trash
+function initEnvironmentDetails() {
+    sim.clouds = [];
+    for (let i = 0; i < 7; i++) {
+        sim.clouds.push({
+            x: Math.random() * WORLD_W,
+            y: 60 + Math.random() * 140,
+            scale: 0.7 + Math.random() * 0.7,
+            speed: 10 + Math.random() * 12
+        });
+    }
+    sim.trashItems = [
+        { x: 1240, y: 610, color: '#FF595E' },
+        { x: 1450, y: 780, color: '#FFD166' }
+    ];
+}
+
+// ============================================================================
+// UI SETUP & CONTROLS
+// ============================================================================
+function renderCharacterDock() {
+    const dock = document.getElementById('characterDock');
+    dock.innerHTML = '';
+
+    FAMILY.forEach(char => {
+        const isSelected = sim.selectedCharId === char.id;
+        const btn = document.createElement('button');
+        btn.onclick = () => selectCharacter(char.id);
+        btn.className = `flex flex-col items-center group focus:outline-none`;
+
+        // Mood/State badge icon
+        let badge = '🚶';
+        if (char.state === 'SWIMMING') badge = '🏊';
+        else if (char.state === 'SLIDING') badge = '💦';
+        else if (char.state === 'COASTER') badge = '🎢';
+        else if (char.state === 'EATING') badge = '🍦';
+        else if (char.state === 'SLEEPING') badge = '💤';
+        else if (char.state === 'RESTING') badge = '🪑';
+        else if (char.state === 'PLAYING_TAG') badge = '🏃';
+
+        // Custom portrait background
+        let bgStyle = 'bg-teal-100';
+        if (char.id === 'anis') bgStyle = 'bg-pink-200';
+        else if (char.id === 'isaac') bgStyle = 'bg-sky-200';
+        else if (char.id === 'hayyan') bgStyle = 'bg-amber-200';
+
+        btn.innerHTML = `
+            <div class="relative portrait-ring ${isSelected ? 'selected' : ''} w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${bgStyle} flex items-center justify-center text-2xl sm:text-3xl">
+                <span>${char.emoji}</span>
+                <span class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white border-2 border-[#2B2D42] text-xs flex items-center justify-center shadow-sm">
+                    ${badge}
+                </span>
+            </div>
+            <span class="mt-1 text-xs sm:text-sm font-display font-bold ${isSelected ? 'text-[#FF595E]' : 'text-[#2B2D42]'}">
+                ${char.name}
+            </span>
+        `;
+        dock.appendChild(btn);
+    });
+}
+
+function selectCharacter(id) {
+    sim.selectedCharId = id;
+    audio.playChime();
+    renderCharacterDock();
+    updateInspector();
+}
+
+function unlockCamera() {
+    sim.selectedCharId = null;
+    sim.camera.targetZoom = window.innerWidth < 640 ? 0.55 : 0.72;
+    sim.camera.targetX = 1150;
+    sim.camera.targetY = 680;
+    document.getElementById('inspectorPill').classList.add('hidden');
+    renderCharacterDock();
+}
+
+function toggleDock() {
+    sim.dockMinimized = !sim.dockMinimized;
+    const dock = document.getElementById('characterDock');
+    const icon = document.getElementById('dockToggleIcon');
+    const text = document.getElementById('dockToggleText');
+    if (sim.dockMinimized) {
+        dock.classList.add('hidden');
+        icon.innerText = '▲';
+        text.innerText = 'Show Family';
+    } else {
+        dock.classList.remove('hidden');
+        icon.innerText = '▼';
+        text.innerText = 'Family Tracker';
+    }
+}
+
+function setSpeed(spd) {
+    sim.speed = spd;
+    [0, 1, 2, 4].forEach(s => {
+        const el = document.getElementById(`spd-${s}`);
+        if (el) {
+            if (s === spd) {
+                el.classList.add('active');
+                el.classList.remove('bg-white');
+            } else {
+                el.classList.remove('active');
+                el.classList.add('bg-white');
+            }
+        }
+    });
+    const mobBtn = document.getElementById('mobileSpeedBtn');
+    if (mobBtn) mobBtn.innerText = spd === 0 ? 'Paused ⏸' : `${spd}x ⚡`;
+}
+
+function cycleSpeedMobile() {
+    const order = [1, 2, 4, 0];
+    const next = order[(order.indexOf(sim.speed) + 1) % order.length];
+    setSpeed(next);
+}
+
+function toggleAudio() {
+    const isOn = audio.toggle();
+    document.getElementById('audioIcon').innerText = isOn ? '🔊' : '🔇';
+    document.getElementById('audioLabel').innerText = isOn ? 'Sound On' : 'Sound Off';
+}
+
+function skipIntro() {
+    sim.mode = 'PLAYING';
+    document.getElementById('introOverlay').classList.add('hidden');
+    unlockCamera();
+}
+
+function restartVacation() {
+    sim.day = 1;
+    sim.timeMinutes = 8 * 60 + 30;
+    sim.mode = 'INTRO';
+    sim.introProgress = 0;
+    sim.stats = { coasterRides: 0, waterSlides: 0, foodEaten: 0, familyChats: 0 };
+    document.getElementById('departureModal').classList.add('hidden');
+    document.getElementById('introOverlay').classList.remove('hidden');
+    FAMILY.forEach((c, idx) => {
+        c.x = 420 + idx * 18;
+        c.y = 595 + (idx % 2) * 15;
+        c.energy = 95;
+        c.fun = 80;
+        c.hunger = 85;
+        c.state = 'WALKING';
+    });
+}
+
+function updateInspector() {
+    const pill = document.getElementById('inspectorPill');
+    if (!sim.selectedCharId) {
+        pill.classList.add('hidden');
+        return;
+    }
+    const c = FAMILY.find(f => f.id === sim.selectedCharId);
+    if (!c) return;
+
+    pill.classList.remove('hidden');
+    document.getElementById('inspAvatar').innerText = c.emoji;
+    document.getElementById('inspName').innerText = `${c.name} (${c.role})`;
+    document.getElementById('inspAge').innerText = `${c.age}y`;
+    document.getElementById('inspAction').innerText = c.actionLabel;
+
+    document.getElementById('barEnergy').style.width = `${Math.round(c.energy)}%`;
+    document.getElementById('barEnergyVal').innerText = `${Math.round(c.energy)}%`;
+
+    document.getElementById('barFun').style.width = `${Math.round(c.fun)}%`;
+    document.getElementById('barFunVal').innerText = `${Math.round(c.fun)}%`;
+
+    document.getElementById('barHunger').style.width = `${Math.round(c.hunger)}%`;
+    document.getElementById('barHungerVal').innerText = `${Math.round(c.hunger)}%`;
+}
+
+// ============================================================================
+// AUTONOMOUS NEEDS-BASED AI & INTERACTION SYSTEM
+// ============================================================================
+function pickNextActivity(char) {
+    // Nighttime Sleep Logic (After 9:30 PM or exhausted)
+    const hour = Math.floor(sim.timeMinutes / 60);
+    if ((hour >= 21 || hour < 6) && char.energy < 70) {
+        char.targetX = ZONES.hotel.doorX + (Math.random() * 20 - 10);
+        char.targetY = ZONES.hotel.doorY;
+        char.nextGoal = 'SLEEPING';
+        char.actionLabel = 'Heading to hotel room to sleep 💤';
+        return;
+    }
+
+    // Check Hunger
+    if (char.hunger < 38) {
+        char.targetX = ZONES.foodStall.x + (Math.random() * 40 - 20);
+        char.targetY = ZONES.foodStall.y + 35;
+        char.nextGoal = 'EATING';
+        char.actionLabel = 'Walking to get yummy snacks 🍦';
+        return;
+    }
+
+    // Check Low Energy (Take a bench break)
+    if (char.energy < 35) {
+        const bench = Math.random() > 0.5 ? ZONES.bench1 : ZONES.bench2;
+        char.targetX = bench.x + (Math.random() * 30 - 15);
+        char.targetY = bench.y + 10;
+        char.nextGoal = 'RESTING';
+        char.actionLabel = 'Taking a cozy bench rest 🪑';
+        return;
+    }
+
+    // Personality-Driven Activity Choices!
+    const roll = Math.random();
+
+    if (char.id === 'hayyan') {
+        // Hayyan (4): Super random, happy-go-lucky, out-of-the-box!
+        if (roll < 0.25) {
+            // Sudden sprint / tag with Isaac!
+            const isaac = FAMILY.find(f => f.id === 'isaac');
+            char.targetX = isaac.x + 25;
+            char.targetY = isaac.y + 15;
+            char.nextGoal = 'PLAYING_TAG';
+            char.actionLabel = 'Chasing Isaac in a game of tag! 🏃';
+            say(char, 'Tag! You are it, Isaac! 😜');
+        } else if (roll < 0.52) {
+            char.targetX = ZONES.slideTop.x;
+            char.targetY = ZONES.slideTop.y + 40;
+            char.nextGoal = 'SLIDING';
+            char.actionLabel = 'Climbing up the giant water slide! 💦';
+        } else if (roll < 0.78) {
+            char.targetX = ZONES.coasterStation.x;
+            char.targetY = ZONES.coasterStation.y + 40;
+            char.nextGoal = 'COASTER';
+            char.actionLabel = 'Running to the Dragon Coaster! 🎢';
+        } else {
+            // Random beach sandcastle / butterfly chase
+            char.targetX = ZONES.beach.x + (Math.random() * 240 - 120);
+            char.targetY = ZONES.beach.y + (Math.random() * 60 - 30);
+            char.nextGoal = 'BEACH_PLAY';
+            char.actionLabel = 'Chasing seagulls on the beach! 🦀';
+            say(char, 'Look! A crabby crab! 🦀');
+        }
+    } else if (char.id === 'isaac') {
+        // Isaac (5): Cheerful, friendly, loves slides, pool & coaster
+        if (roll < 0.35) {
+            char.targetX = ZONES.slideTop.x;
+            char.targetY = ZONES.slideTop.y + 40;
+            char.nextGoal = 'SLIDING';
+            char.actionLabel = 'Going for the Aqua Racer slide! 🌊';
+        } else if (roll < 0.65) {
+            char.targetX = ZONES.pool.x + (Math.random() * 180 - 90);
+            char.targetY = ZONES.pool.y + (Math.random() * 80 - 40);
+            char.nextGoal = 'SWIMMING';
+            char.actionLabel = 'Swimming in the lagoon pool! 🏊';
+        } else if (roll < 0.85) {
+            char.targetX = ZONES.coasterStation.x;
+            char.targetY = ZONES.coasterStation.y + 40;
+            char.nextGoal = 'COASTER';
+            char.actionLabel = 'Queuing for Dragon Coaster! 🎢';
+        } else {
+            char.targetX = ZONES.playground.x + 30;
+            char.targetY = ZONES.playground.y + 40;
+            char.nextGoal = 'PLAYGROUND';
+            char.actionLabel = 'Exploring Adventure Castle! 🏰';
+        }
+    } else if (char.id === 'anis') {
+        // Anis (31): Sweet Muslimah mom, watches kids, swims gently, enjoys leisure & snacks
+        if (roll < 0.35) {
+            char.targetX = ZONES.pool.x + (Math.random() * 140 - 70);
+            char.targetY = ZONES.pool.y + (Math.random() * 60 - 30);
+            char.nextGoal = 'SWIMMING';
+            char.actionLabel = 'Cooling off in the resort pool 🏊‍♀️';
+        } else if (roll < 0.65) {
+            char.targetX = ZONES.bench1.x + 25;
+            char.targetY = ZONES.bench1.y + 10;
+            char.nextGoal = 'RESTING';
+            char.actionLabel = 'Relaxing under the palm shade 🌴';
+        } else if (roll < 0.85) {
+            char.targetX = ZONES.foodStall.x + 15;
+            char.targetY = ZONES.foodStall.y + 35;
+            char.nextGoal = 'EATING';
+            char.actionLabel = 'Getting cold drinks & fruit 🍹';
+        } else {
+            char.targetX = ZONES.beach.x - 60;
+            char.targetY = ZONES.beach.y - 20;
+            char.nextGoal = 'BEACH_PLAY';
+            char.actionLabel = 'Strolling along the breezy beach 🏖️';
+        }
+    } else {
+        // Izmi (34): Dad, rides coasters with kids, swims, takes photos, relaxes
+        if (roll < 0.32) {
+            char.targetX = ZONES.coasterStation.x;
+            char.targetY = ZONES.coasterStation.y + 40;
+            char.nextGoal = 'COASTER';
+            char.actionLabel = 'Riding the Dragon Coaster! 🎢';
+        } else if (roll < 0.62) {
+            char.targetX = ZONES.pool.x + (Math.random() * 160 - 80);
+            char.targetY = ZONES.pool.y + (Math.random() * 70 - 35);
+            char.nextGoal = 'SWIMMING';
+            char.actionLabel = 'Swimming with the family! 🏊‍♂️';
+        } else if (roll < 0.82) {
+            char.targetX = ZONES.bench1.x - 10;
+            char.targetY = ZONES.bench1.y + 12;
+            char.nextGoal = 'RESTING';
+            char.actionLabel = 'Taking a breather on the bench 📷';
+        } else {
+            char.targetX = ZONES.beach.x + 80;
+            char.targetY = ZONES.beach.y - 10;
+            char.nextGoal = 'BEACH_PLAY';
+            char.actionLabel = 'Enjoying the ocean breeze 🌊';
+        }
+    }
+}
+
+function say(char, text, duration = 4.2) {
+    char.speech = text;
+    char.speechTimer = duration;
+}
+
+function spawnParticles(x, y, color, count = 8) {
+    for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 30 + Math.random() * 70;
+        sim.particles.push({
+            x, y,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd - 30,
+            life: 0.6 + Math.random() * 0.4,
+            maxLife: 1.0,
+            color,
+            size: 3 + Math.random() * 4
+        });
+    }
+}
+
+// ============================================================================
+// MAIN SIMULATION UPDATE LOOP
+// ============================================================================
+function updateSimulation(dt) {
+    if (sim.speed === 0 || sim.mode === 'DEPARTURE') return;
+
+    // Intro Sequence Logic
+    if (sim.mode === 'INTRO') {
+        sim.introProgress += dt * 0.16;
+        // Camera pans smoothly along the arrival road with the family car
+        const carX = 120 + sim.introProgress * 320;
+        const carY = 630;
+        sim.camera.targetX = carX + 180;
+        sim.camera.targetY = carY - 40;
+        sim.camera.targetZoom = 0.9;
+
+        if (sim.introProgress >= 1) {
+            skipIntro();
+        }
+        updateCamera(dt);
+        return;
+    }
+
+    const scaledDt = dt * sim.speed;
+
+    // Advance Clock (Night passes 2.2x faster so kids don't wait long while sleeping!)
+    const timeRate = sim.isNight ? 18 : 8; // game minutes per real second at 1x
+    sim.timeMinutes += scaledDt * timeRate;
+
+    if (sim.timeMinutes >= 24 * 60) {
+        sim.timeMinutes -= 24 * 60;
+        sim.day++;
+    }
+
+    // Check Friday 6:00 PM Departure!
+    if (sim.day === 5 && sim.timeMinutes >= 18 * 60) {
+        sim.mode = 'DEPARTURE';
+        document.getElementById('statCoaster').innerText = sim.stats.coasterRides;
+        document.getElementById('statSlides').innerText = sim.stats.waterSlides;
+        document.getElementById('statFood').innerText = sim.stats.foodEaten;
+        document.getElementById('statChats').innerText = sim.stats.familyChats;
+        document.getElementById('departureModal').classList.remove('hidden');
+        audio.playChime();
+        return;
+    }
+
+    // Day / Night Transition (Night: 19:00 to 06:30)
+    const hour = sim.timeMinutes / 60;
+    const wasNight = sim.isNight;
+    sim.isNight = (hour >= 19 || hour < 6.5);
+    if (wasNight !== sim.isNight && audio.enabled) {
+        audio.startBGM(); // Switch melody between tropical day and neon night
+    }
+    const targetNight = sim.isNight ? 1 : 0;
+    sim.nightFactor += (targetNight - sim.nightFactor) * Math.min(1, dt * 1.5);
+
+    // Update Rides
+    sim.ferris.angle += scaledDt * 0.35;
+    sim.cableCar.t += scaledDt * 0.08 * sim.cableCar.dir;
+    if (sim.cableCar.t > 1) { sim.cableCar.t = 1; sim.cableCar.dir = -1; }
+    if (sim.cableCar.t < 0) { sim.cableCar.t = 0; sim.cableCar.dir = 1; }
+
+    // Roller Coaster Train Movement
+    sim.coaster.progress = (sim.coaster.progress + scaledDt * 0.22) % 1;
+
+    // Clouds
+    sim.clouds.forEach(cl => {
+        cl.x += cl.speed * scaledDt;
+        if (cl.x > WORLD_W + 150) cl.x = -150;
+    });
+
+    // Update Family AI Agents
+    FAMILY.forEach(char => {
+        if (char.speechTimer > 0) char.speechTimer -= dt;
+
+        // Need decay/recovery
+        if (char.state === 'SLEEPING') {
+            char.energy = Math.min(100, char.energy + scaledDt * 9);
+            char.actionLabel = 'Sleeping soundly in hotel 💤';
+            if (!sim.isNight && char.energy >= 95) {
+                char.state = 'WALKING';
+                char.x = ZONES.hotel.doorX;
+                char.y = ZONES.hotel.doorY + 25;
+                say(char, 'Good morning! Ready for fun! ☀️');
+                pickNextActivity(char);
+            }
+            return;
+        }
+
+        char.energy = Math.max(5, char.energy - scaledDt * 0.7);
+        char.hunger = Math.max(5, char.hunger - scaledDt * 0.8);
+        char.fun = Math.max(10, char.fun - scaledDt * 0.5);
+
+        // Handle Active Timed States
+        if (char.stateTimer > 0) {
+            char.stateTimer -= scaledDt;
+
+            if (char.state === 'SLIDING') {
+                // Slide curve from top to splash pool
+                const p = 1 - Math.max(0, char.stateTimer / 3.0);
+                char.x = ZONES.slideTop.x + p * 75 + Math.sin(p * Math.PI * 2) * 18;
+                char.y = ZONES.slideTop.y + 30 + p * 165;
+                if (char.stateTimer <= 0) {
+                    char.state = 'SWIMMING';
+                    char.stateTimer = 5 + Math.random() * 4;
+                    char.actionLabel = 'Splashing in the pool! 💦';
+                    say(char, 'SPLASH!! That was awesome! 🌊');
+                    spawnParticles(char.x, char.y, '#4CC9F0', 14);
+                    audio.playSplash();
+                    sim.stats.waterSlides++;
+                }
+                return;
+            }
+
+            if (char.state === 'COASTER') {
+                // Character rides along the coaster track!
+                const t = sim.coaster.progress;
+                const pos = getCoasterPoint(t);
+                char.x = pos.x;
+                char.y = pos.y - 10;
+                char.fun = Math.min(100, char.fun + scaledDt * 8);
+                if (char.stateTimer <= 0) {
+                    char.state = 'WALKING';
+                    char.x = ZONES.coasterStation.x;
+                    char.y = ZONES.coasterStation.y + 45;
+                    say(char, 'Woohoo! Best coaster ever! 🎢');
+                    sim.stats.coasterRides++;
+                    pickNextActivity(char);
+                }
+                return;
+            }
+
+            if (char.state === 'SWIMMING') {
+                char.walkCycle += scaledDt * 4;
+                char.x += Math.cos(char.walkCycle * 0.5) * 12 * scaledDt;
+                char.y += Math.sin(char.walkCycle * 0.4) * 8 * scaledDt;
+                char.fun = Math.min(100, char.fun + scaledDt * 4);
+                if (Math.random() < 0.04) spawnParticles(char.x, char.y + 8, '#90E0EF', 3);
+            } else if (char.state === 'RESTING') {
+                char.energy = Math.min(100, char.energy + scaledDt * 6);
+                // Contextual chat with nearby Bench Guest NPC!
+                const benchGuest = NPCS.find(n => n.type === 'BENCH_GUEST');
+                if (benchGuest && Math.hypot(char.x - benchGuest.x, char.y - benchGuest.y) < 90 && benchGuest.chatCooldown <= 0) {
+                    benchGuest.chatCooldown = 25;
+                    benchGuest.speech = 'Hi! Where are you from? Enjoying the resort? 😊';
+                    benchGuest.speechTimer = 4.5;
+                    setTimeout(() => {
+                        say(char, 'Hi! We are from Johor! Having a blast! 👋', 4.5);
+                        sim.stats.familyChats++;
+                    }, 1800);
+                }
+            } else if (char.state === 'EATING') {
+                char.hunger = Math.min(100, char.hunger + scaledDt * 12);
+            }
+
+            if (char.stateTimer <= 0) {
+                // Occasionally drop litter after eating so Groundskeeper NPC can sweep it!
+                if (char.state === 'EATING' && Math.random() < 0.5) {
+                    sim.trashItems.push({ x: char.x + 15, y: char.y + 12, color: '#FF7597' });
+                }
+                char.state = 'WALKING';
+                pickNextActivity(char);
+            }
+            return;
+        }
+
+        // Movement towards target
+        const dx = char.targetX - char.x;
+        const dy = char.targetY - char.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist > 12) {
+            const moveSpd = (char.nextGoal === 'PLAYING_TAG' ? char.speed * 1.35 : char.speed);
+            char.x += (dx / dist) * moveSpd * scaledDt;
+            char.y += (dy / dist) * moveSpd * scaledDt;
+            char.walkCycle += scaledDt * 9;
+            char.facing = dx >= 0 ? 1 : -1;
+        } else {
+            // Arrived at destination! Trigger activity
+            const goal = char.nextGoal || 'SWIMMING';
+            if (goal === 'SLEEPING') {
+                char.state = 'SLEEPING';
+            } else if (goal === 'SLIDING') {
+                char.state = 'SLIDING';
+                char.stateTimer = 3.0;
+                char.actionLabel = 'Sliding down Aqua Racer! 💦';
+                say(char, 'Here I gooo!! 💦');
+            } else if (goal === 'COASTER') {
+                char.state = 'COASTER';
+                char.stateTimer = 4.5;
+                char.actionLabel = 'Riding Dragon Coaster! 🎢';
+                say(char, 'Hands up!! 🎢🙌');
+                audio.playCoasterWhoosh();
+            } else if (goal === 'SWIMMING') {
+                char.state = 'SWIMMING';
+                char.stateTimer = 6 + Math.random() * 5;
+                char.actionLabel = 'Swimming in the lagoon! 🏊';
+                audio.playSplash();
+                spawnParticles(char.x, char.y, '#4CC9F0', 10);
+            } else if (goal === 'EATING') {
+                char.state = 'EATING';
+                char.stateTimer = 4.5;
+                char.actionLabel = 'Eating delicious resort treats 🍦';
+                say(char, 'Yummy ice cream! 🍦😋');
+                sim.stats.foodEaten++;
+            } else if (goal === 'RESTING') {
+                char.state = 'RESTING';
+                char.stateTimer = 5.5;
+                char.actionLabel = 'Resting on a sunny bench 🪑';
+            } else {
+                char.state = 'WALKING';
+                char.stateTimer = 3.0;
+                char.actionLabel = 'Playing & having fun! ✨';
+            }
+        }
+    });
+
+    // Organic Family Proximity Chat Anytime!
+    if (Math.random() < 0.015 * sim.speed) {
+        const a = FAMILY[Math.floor(Math.random() * FAMILY.length)];
+        const b = FAMILY[Math.floor(Math.random() * FAMILY.length)];
+        if (a.id !== b.id && a.state !== 'SLEEPING' && b.state !== 'SLEEPING' && a.speechTimer <= 0) {
+            if (Math.hypot(a.x - b.x, a.y - b.y) < 150) {
+                const lines = [
+                    `Hey ${b.name}, let's go swim together! 🏊`,
+                    `${b.name}, look at the Ferris wheel! 🎡`,
+                    `Best family holiday ever, ${b.name}! ❤️`,
+                    `Race you to the water slide, ${b.name}! 🏃`
+                ];
+                say(a, lines[Math.floor(Math.random() * lines.length)]);
+                sim.stats.familyChats++;
+            }
+        }
+    }
+
+    // Update NPCs (Groundskeeper sweeps trash, Visitors roam)
+    NPCS.forEach(npc => {
+        if (npc.speechTimer > 0) npc.speechTimer -= dt;
+        if (npc.chatCooldown > 0) npc.chatCooldown -= dt;
+
+        if (npc.type === 'KEEPER') {
+            // Groundskeeper targets nearest trash item, otherwise patrols quietly
+            if (sim.trashItems.length > 0) {
+                const trash = sim.trashItems[0];
+                npc.targetX = trash.x;
+                npc.targetY = trash.y;
+                if (Math.hypot(npc.x - trash.x, npc.y - trash.y) < 16) {
+                    sim.trashItems.shift();
+                    spawnParticles(trash.x, trash.y, '#06D6A0', 6);
+                }
+            } else if (Math.hypot(npc.x - npc.targetX, npc.y - npc.targetY) < 15) {
+                npc.targetX = 800 + Math.random() * 800;
+                npc.targetY = 580 + Math.random() * 250;
+            }
+        } else if (npc.type === 'VISITOR') {
+            if (Math.hypot(npc.x - npc.targetX, npc.y - npc.targetY) < 15) {
+                if (npc.state === 'SWIMMING') {
+                    npc.targetX = ZONES.pool.x + (Math.random() * 220 - 110);
+                    npc.targetY = ZONES.pool.y + (Math.random() * 100 - 50);
+                } else {
+                    npc.targetX = 650 + Math.random() * 1100;
+                    npc.targetY = 580 + Math.random() * 450;
+                }
+            }
+        }
+
+        if (npc.speed > 0) {
+            const dx = npc.targetX - npc.x;
+            const dy = npc.targetY - npc.y;
+            const d = Math.hypot(dx, dy);
+            if (d > 5) {
+                npc.x += (dx / d) * npc.speed * scaledDt;
+                npc.y += (dy / d) * npc.speed * scaledDt;
+                npc.walkCycle += scaledDt * 6;
+                npc.facing = dx >= 0 ? 1 : -1;
+            }
+        }
+    });
+
+    // Update Particles
+    for (let i = sim.particles.length - 1; i >= 0; i--) {
+        const p = sim.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 120 * dt;
+        p.life -= dt;
+        if (p.life <= 0) sim.particles.splice(i, 1);
+    }
+
+    // Update HUD & Camera
+    updateHUD();
+    updateCamera(dt);
+}
+
+function updateHUD() {
+    const totalMins = Math.floor(sim.timeMinutes);
+    let h = Math.floor(totalMins / 60) % 24;
+    const m = totalMins % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+
+    document.getElementById('clockText').innerText = `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+    document.getElementById('dayText').innerText = `Day ${sim.day} - ${sim.days[sim.day - 1]}`;
+
+    const badge = document.getElementById('periodBadge');
+    const skyIcon = document.getElementById('skyIcon');
+    const skyDial = document.getElementById('skyDial');
+    if (sim.isNight) {
+        badge.innerText = 'Neon Night';
+        badge.className = 'text-[10px] sm:text-xs font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#7209B7] text-white border border-[#2B2D42]';
+        skyIcon.innerText = '🌙';
+        skyDial.className = 'w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-[#2B2D42] flex items-center justify-center bg-indigo-950 shadow-inner shrink-0';
+    } else {
+        badge.innerText = 'Daytime';
+        badge.className = 'text-[10px] sm:text-xs font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#FFD166] text-[#2B2D42] border border-[#2B2D42]';
+        skyIcon.innerText = '☀️';
+        skyDial.className = 'w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-[#2B2D42] flex items-center justify-center bg-sky-200 shadow-inner shrink-0';
+    }
+
+    if (sim.selectedCharId) {
+        updateInspector();
+    }
+    renderCharacterDock();
+}
+
+function updateCamera(dt) {
+    if (sim.selectedCharId && sim.mode === 'PLAYING') {
+        const target = FAMILY.find(f => f.id === sim.selectedCharId);
+        if (target) {
+            sim.camera.targetX = target.x;
+            sim.camera.targetY = target.y - 20;
+            sim.camera.targetZoom = window.innerWidth < 640 ? 1.15 : 1.35;
+        }
+    }
+
+    sim.camera.x += (sim.camera.targetX - sim.camera.x) * Math.min(1, dt * 5);
+    sim.camera.y += (sim.camera.targetY - sim.camera.y) * Math.min(1, dt * 5);
+    sim.camera.zoom += (sim.camera.targetZoom - sim.camera.zoom) * Math.min(1, dt * 5);
+}
+
+// ============================================================================
+// CEL-SHADED / STORYBOOK & NEON CARNIVAL CANVAS RENDERER
+// ============================================================================
+function getCoasterPoint(t) {
+    // Parametric roller coaster track curve in Theme Park zone
+    const startX = 1520;
+    const width = 420;
+    const x = startX + Math.sin(t * Math.PI * 2) * (width * 0.48) + width * 0.48;
+    const y = 450 - Math.abs(Math.sin(t * Math.PI * 3)) * 150 + Math.cos(t * Math.PI * 2) * 35;
+    return { x, y };
+}
+
+function drawRoundedRect(x, y, w, h, r, fill, stroke = '#2B2D42', lw = 3) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+    }
+    if (stroke) {
+        ctx.lineWidth = lw;
+        ctx.strokeStyle = stroke;
+        ctx.stroke();
+    }
+}
+
+function drawWorld() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.save();
+    // Apply Camera Transform
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(sim.camera.zoom, sim.camera.zoom);
+    ctx.translate(-sim.camera.x, -sim.camera.y);
+
+    const nf = sim.nightFactor;
+
+    // 1. Sky & Distant Hills
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, 520);
+    if (nf < 0.5) {
+        skyGrad.addColorStop(0, '#72EFDD');
+        skyGrad.addColorStop(1, '#BDE0FE');
+    } else {
+        skyGrad.addColorStop(0, '#10002B');
+        skyGrad.addColorStop(1, '#240046');
+    }
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, WORLD_W, 550);
+
+    // Stars at night
+    if (nf > 0.2) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${nf * 0.85})`;
+        for (let i = 0; i < 45; i++) {
+            const sx = (i * 197) % WORLD_W;
+            const sy = (i * 73) % 280;
+            ctx.beginPath();
+            ctx.arc(sx, sy, (i % 2) + 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Fluffy Storybook Clouds
+    sim.clouds.forEach(cl => {
+        ctx.save();
+        ctx.translate(cl.x, cl.y);
+        ctx.scale(cl.scale, cl.scale);
+        ctx.fillStyle = nf > 0.5 ? 'rgba(157, 78, 221, 0.35)' : 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 32, 0, Math.PI * 2);
+        ctx.arc(28, -8, 38, 0, Math.PI * 2);
+        ctx.arc(62, 0, 30, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+
+    // Lush Tropical Hills
+    ctx.fillStyle = nf > 0.5 ? '#1B4332' : '#80ED99';
+    ctx.beginPath();
+    ctx.moveTo(0, 420);
+    ctx.quadraticCurveTo(450, 260, 950, 400);
+    ctx.quadraticCurveTo(1500, 240, 2400, 380);
+    ctx.lineTo(2400, 560);
+    ctx.lineTo(0, 560);
+    ctx.fill();
+
+    // 2. Main Resort Ground (Lush Grass)
+    ctx.fillStyle = nf > 0.5 ? '#143628' : '#95D5B2';
+    ctx.fillRect(0, 420, WORLD_W, 740);
+
+    // 3. Golden Beach & Sparkling Ocean (Bottom)
+    ctx.fillStyle = nf > 0.5 ? '#9C6644' : '#FFE8A3';
+    ctx.beginPath();
+    ctx.moveTo(0, 1120);
+    ctx.quadraticCurveTo(1200, 1080, WORLD_W, 1140);
+    ctx.lineTo(WORLD_W, 1340);
+    ctx.lineTo(0, 1340);
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#2B2D42';
+    ctx.stroke();
+
+    // Ocean Waves
+    ctx.fillStyle = nf > 0.5 ? '#03045E' : '#00B4D8';
+    ctx.fillRect(0, 1310, WORLD_W, 250);
+    ctx.fillStyle = nf > 0.5 ? '#0077B6' : '#90E0EF';
+    for (let wx = 40; wx < WORLD_W; wx += 180) {
+        ctx.beginPath();
+        ctx.roundRect(wx + Math.sin(Date.now() * 0.002 + wx) * 15, 1320, 110, 10, 5);
+        ctx.fill();
+    }
+
+    // 4. Paved Resort Pathways
+    ctx.fillStyle = nf > 0.5 ? '#4A4E69' : '#F8EDEB';
+    ctx.strokeStyle = '#2B2D42';
+    ctx.lineWidth = 3;
+    // Main Horizontal Promenade
+    drawRoundedRect(100, 580, 2050, 75, 25, nf > 0.5 ? '#4A4E69' : '#F8EDEB');
+    // Vertical connector to Beach
+    drawRoundedRect(1080, 620, 70, 520, 20, nf > 0.5 ? '#4A4E69' : '#F8EDEB');
+    // Left connector to Playground
+    drawRoundedRect(530, 620, 65, 310, 20, nf > 0.5 ? '#4A4E69' : '#F8EDEB');
+
+    // 5. Cable Car Line & Gondola (High above resort)
+    ctx.strokeStyle = nf > 0.5 ? '#FF006E' : '#2B2D42';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(ZONES.cableStationA.x, ZONES.cableStationA.y);
+    ctx.quadraticCurveTo(1240, 290, ZONES.cableStationB.x, ZONES.cableStationB.y);
+    ctx.stroke();
+
+    // Towers
+    [ZONES.cableStationA, ZONES.cableStationB].forEach(st => {
+        drawRoundedRect(st.x - 18, st.y, 36, 190, 6, '#FF9F1C');
+    });
+
+    // Moving Cable Car Cabin
+    const ct = sim.cableCar.t;
+    const cx = (1 - ct) * (1 - ct) * ZONES.cableStationA.x + 2 * (1 - ct) * ct * 1240 + ct * ct * ZONES.cableStationB.x;
+    const cy = (1 - ct) * (1 - ct) * ZONES.cableStationA.y + 2 * (1 - ct) * ct * 290 + ct * ct * ZONES.cableStationB.y;
+    drawRoundedRect(cx - 26, cy + 8, 52, 34, 10, nf > 0.5 ? '#00F5D4' : '#FF595E');
+    drawRoundedRect(cx - 18, cy + 14, 36, 14, 4, '#CAF0F8', '#2B2D42', 2);
+
+    // 6. Wonderland Resort Hotel (Top Left)
+    drawHotel(nf);
+
+    // 7. Waterpark Lagoon Pool & Spiral Water Slides (Center)
+    drawWaterpark(nf);
+
+    // 8. Theme Park: Dragon Roller Coaster & Sunny Ferris Wheel (Right)
+    drawThemePark(nf);
+
+    // 9. Snack Stall, Benches & Kids Playground
+    drawAmenities(nf);
+
+    // 10. Trash Items on Ground
+    sim.trashItems.forEach(tr => {
+        drawRoundedRect(tr.x - 6, tr.y - 6, 12, 12, 3, tr.color, '#2B2D42', 2);
+    });
+
+    // 11. Draw All Characters (Sorted by Y for proper 2.5D depth!)
+    const allEntities = [
+        ...FAMILY.map(f => ({ ...f, isFamily: true })),
+        ...NPCS.map(n => ({ ...n, isFamily: false }))
+    ].sort((a, b) => a.y - b.y);
+
+    allEntities.forEach(ent => {
+        if (ent.state === 'SLEEPING') return; // Inside hotel sleeping
+        drawCharacter(ent, nf);
+    });
+
+    // 12. Arrival Car during Intro Mode
+    if (sim.mode === 'INTRO') {
+        const carX = 120 + sim.introProgress * 320;
+        drawFamilyCar(carX, 625);
+    }
+
+    // 13. Water & Sparkle Particles
+    sim.particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    ctx.restore();
+}
+
+function drawHotel(nf) {
+    const hx = 280, hy = 300, hw = 300, hh = 260;
+    // Main building
+    drawRoundedRect(hx, hy, hw, hh, 16, nf > 0.5 ? '#3C096C' : '#FFD166', nf > 0.5 ? '#FF006E' : '#2B2D42', 4);
+    // Roof
+    ctx.fillStyle = nf > 0.5 ? '#7209B7' : '#FF595E';
+    ctx.beginPath();
+    ctx.moveTo(hx - 15, hy + 10);
+    ctx.lineTo(hx + hw / 2, hy - 55);
+    ctx.lineTo(hx + hw + 15, hy + 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#2B2D42';
+    ctx.stroke();
+
+    // Hotel Sign
+    drawRoundedRect(hx + 55, hy - 18, 190, 34, 10, '#FFFDF7', nf > 0.5 ? '#00F5D4' : '#2B2D42', 3);
+    ctx.fillStyle = '#2B2D42';
+    ctx.font = 'bold 15px Fredoka, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('WONDERLAND HOTEL', hx + 150, hy + 4);
+
+    // Windows (Glow warm yellow at night!)
+    for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 4; col++) {
+            const wx = hx + 32 + col * 64;
+            const wy = hy + 45 + row * 68;
+            drawRoundedRect(wx, wy, 42, 44, 8, nf > 0.5 ? '#FFE66D' : '#A8DADC', '#2B2D42', 2.5);
+        }
+    }
+
+    // Entrance Arch
+    drawRoundedRect(hx + 115, hy + 185, 70, 75, 12, '#06D6A0', '#2B2D42', 3);
+}
+
+function drawWaterpark(nf) {
+    // Lagoon Pool
+    const px = 780, py = 600, pw = 360, ph = 210;
+    // Deck border
+    drawRoundedRect(px - 18, py - 18, pw + 36, ph + 36, 55, nf > 0.5 ? '#3A0CA3' : '#F4A261', '#2B2D42', 3);
+    // Glowing Water
+    drawRoundedRect(px, py, pw, ph, 45, nf > 0.5 ? '#00F5D4' : '#4CC9F0', nf > 0.5 ? '#FFFFFF' : '#2B2D42', 4);
+
+    // Water Slide Tower & Winding Tubes
+    drawRoundedRect(775, 430, 50, 175, 8, '#E76F51');
+    // Blue & Yellow Slides
+    ctx.lineWidth = 22;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#2B2D42';
+    ctx.beginPath();
+    ctx.moveTo(800, 455);
+    ctx.bezierCurveTo(730, 510, 910, 540, 860, 635);
+    ctx.stroke();
+
+    ctx.lineWidth = 15;
+    ctx.strokeStyle = nf > 0.5 ? '#FF006E' : '#FFBE0B';
+    ctx.stroke();
+
+    // Sign
+    drawRoundedRect(735, 395, 130, 30, 10, '#06D6A0');
+    ctx.fillStyle = '#2B2D42';
+    ctx.font = 'bold 13px Fredoka, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('AQUA WATERPARK', 800, 415);
+}
+
+function drawThemePark(nf) {
+    // Sunny Ferris Wheel
+    const fx = ZONES.ferrisWheel.x, fy = ZONES.ferrisWheel.y, r = 125;
+    // Support Legs
+    ctx.strokeStyle = '#2B2D42';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(fx - 65, fy + 150);
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(fx + 65, fy + 150);
+    ctx.stroke();
+
+    // Wheel Rim
+    ctx.beginPath();
+    ctx.arc(fx, fy, r, 0, Math.PI * 2);
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = nf > 0.5 ? '#00F5D4' : '#FF595E';
+    ctx.stroke();
+
+    // Spokes & Cabins
+    for (let i = 0; i < 8; i++) {
+        const a = sim.ferris.angle + (i * Math.PI) / 4;
+        const gx = fx + Math.cos(a) * r;
+        const gy = fy + Math.sin(a) * r;
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(gx, gy);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = nf > 0.5 ? '#F72585' : '#2B2D42';
+        ctx.stroke();
+
+        drawRoundedRect(gx - 12, gy - 8, 24, 18, 6, i % 2 === 0 ? '#FFD166' : '#FF7597', '#2B2D42', 2);
+    }
+
+    // Dragon Roller Coaster Track
+    ctx.beginPath();
+    for (let i = 0; i <= 40; i++) {
+        const pt = getCoasterPoint(i / 40);
+        if (i === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#2B2D42';
+    ctx.stroke();
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = nf > 0.5 ? '#FFBE0B' : '#FF595E';
+    ctx.stroke();
+
+    // Coaster Cars
+    for (let c = 0; c < 3; c++) {
+        const pt = getCoasterPoint((sim.coaster.progress - c * 0.025 + 1) % 1);
+        drawRoundedRect(pt.x - 14, pt.y - 10, 28, 16, 6, '#06D6A0', '#2B2D42', 2.5);
+    }
+}
+
+function drawAmenities(nf) {
+    // Snack & Ice Cream Stall
+    const sx = ZONES.foodStall.x, sy = ZONES.foodStall.y;
+    drawRoundedRect(sx - 45, sy - 45, 90, 65, 10, '#FFFDF7');
+    drawRoundedRect(sx - 52, sy - 60, 104, 24, 8, nf > 0.5 ? '#FF006E' : '#FF7597');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 12px Fredoka, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SNACKS & ICE CREAM', sx, sy - 44);
+
+    // Park Benches
+    [ZONES.bench1, ZONES.bench2].forEach(b => {
+        drawRoundedRect(b.x - 32, b.y - 10, 64, 20, 6, '#E09F3E');
+    });
+
+    // Kids Adventure Castle Playground
+    const px = ZONES.playground.x, py = ZONES.playground.y;
+    drawRoundedRect(px - 45, py - 45, 90, 80, 14, '#FF9F1C');
+    drawRoundedRect(px - 20, py - 75, 40, 35, 8, '#FF595E');
+
+    // Palm Trees around Resort
+    const palms = [
+        [660, 560], [1230, 530], [1480, 560], [720, 860], [1260, 920], [820, 1080], [1340, 1090]
+    ];
+    palms.forEach(([tx, ty]) => drawPalmTree(tx, ty, nf));
+}
+
+function drawPalmTree(x, y, nf) {
+    // Trunk
+    ctx.strokeStyle = '#2B2D42';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + 12, y - 45, x + 4, y - 85);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#A47148';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Fronds
+    const topX = x + 4, topY = y - 85;
+    for (let i = 0; i < 5; i++) {
+        const ang = -Math.PI * 0.85 + i * 0.42;
+        ctx.beginPath();
+        ctx.ellipse(topX + Math.cos(ang) * 26, topY + Math.sin(ang) * 16, 26, 9, ang, 0, Math.PI * 2);
+        ctx.fillStyle = nf > 0.5 ? '#06D6A0' : '#52B788';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#2B2D42';
+        ctx.stroke();
+    }
+}
+
+function drawFamilyCar(x, y) {
+    drawRoundedRect(x - 55, y - 24, 110, 36, 12, '#FF595E');
+    drawRoundedRect(x - 35, y - 44, 70, 24, 10, '#CAF0F8');
+    // Wheels
+    [x - 32, x + 32].forEach(wx => {
+        ctx.beginPath();
+        ctx.arc(wx, y + 14, 13, 0, Math.PI * 2);
+        ctx.fillStyle = '#2B2D42';
+        ctx.fill();
+    });
+}
+
+function drawCharacter(c, nf) {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+
+    const scale = c.heightScale || 0.95;
+    ctx.scale(scale, scale);
+
+    // Selection Halo if tracked by user
+    if (c.isFamily && sim.selectedCharId === c.id) {
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 24, 10, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 209, 102, 0.55)';
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#FF595E';
+        ctx.stroke();
+    }
+
+    // Ground Shadow
+    ctx.beginPath();
+    ctx.ellipse(0, 14, 15, 6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(43, 45, 66, 0.25)';
+    ctx.fill();
+
+    const bob = (c.state === 'WALKING' || c.state === 'PLAYING_TAG') ? Math.abs(Math.sin(c.walkCycle)) * 4 : 0;
+
+    // Swimming Ripples (Hide legs when in pool!)
+    if (c.state === 'SWIMMING') {
+        ctx.beginPath();
+        ctx.ellipse(0, 4, 20 + Math.sin(c.walkCycle) * 3, 8, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+    } else {
+        // Legs
+        const legSwing = (c.state === 'WALKING' || c.state === 'PLAYING_TAG') ? Math.sin(c.walkCycle) * 5 : 0;
+        drawRoundedRect(-9, -4 + legSwing, 7, 16, 3, c.pants || '#3D405B', '#2B2D42', 2);
+        drawRoundedRect(2, -4 - legSwing, 7, 16, 3, c.pants || '#3D405B', '#2B2D42', 2);
+    }
+
+    // Torso / Outfit
+    if (c.id === 'anis') {
+        // Anis: Cute Pink & Yellow Floral Long-Sleeved Muslimah Resort Dress/Skirt
+        drawRoundedRect(-14, -28 - bob, 28, 32, 10, c.dress, '#2B2D42', 2.5);
+        // Yellow floral hem accent
+        drawRoundedRect(-13, -6 - bob, 26, 8, 4, c.dressAccent, '#2B2D42', 1.5);
+        // Long sleeves (pink, no hand socks)
+        drawRoundedRect(-19, -25 - bob, 6, 18, 3, c.dress, '#2B2D42', 2);
+        drawRoundedRect(13, -25 - bob, 6, 18, 3, c.dress, '#2B2D42', 2);
+    } else {
+        // Casual Resort Shirt
+        drawRoundedRect(-13, -26 - bob, 26, 24, 8, c.shirt || '#3A86FF', '#2B2D42', 2.5);
+    }
+
+    // Head
+    const headY = -40 - bob;
+    ctx.beginPath();
+    ctx.arc(0, headY, 15, 0, Math.PI * 2);
+    ctx.fillStyle = c.skin || '#D4956A';
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#2B2D42';
+    ctx.stroke();
+
+    // Hair / Hijab Styling
+    if (c.hijab) {
+        // Cute Pastel Pink Hijab
+        ctx.beginPath();
+        ctx.arc(0, headY - 1, 17, Math.PI * 0.85, Math.PI * 2.15);
+        ctx.lineTo(14, headY + 15);
+        ctx.lineTo(-14, headY + 15);
+        ctx.closePath();
+        ctx.fillStyle = c.hijab;
+        ctx.fill();
+        ctx.stroke();
+        // Re-draw sweet face oval inside hijab
+        ctx.beginPath();
+        ctx.arc(0, headY + 1, 11.5, 0, Math.PI * 2);
+        ctx.fillStyle = c.skin;
+        ctx.fill();
+    } else if (c.tousledHair) {
+        // Hayyan's playful tousled spikes
+        ctx.fillStyle = c.hair;
+        ctx.beginPath();
+        ctx.arc(0, headY - 5, 15, Math.PI, 0);
+        ctx.lineTo(17, headY - 12);
+        ctx.lineTo(6, headY - 18);
+        ctx.lineTo(-4, headY - 21);
+        ctx.lineTo(-15, headY - 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    } else {
+        // Neat dark hair (Izmi / Isaac side-part)
+        ctx.fillStyle = c.hair || '#1E1E24';
+        ctx.beginPath();
+        ctx.arc(0, headY - 4, 15, Math.PI, 0);
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    // Eyes & Smile
+    ctx.fillStyle = '#2B2D42';
+    ctx.beginPath();
+    ctx.arc(-4.5, headY, 2, 0, Math.PI * 2);
+    ctx.arc(4.5, headY, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cheerful Smile
+    ctx.beginPath();
+    ctx.arc(0, headY + 3, 4.5, 0.1 * Math.PI, 0.9 * Math.PI);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Izmi's Rectangular Glasses & Thin Beard/Mustache
+    if (c.glasses) {
+        ctx.strokeStyle = '#2B2D42';
+        ctx.lineWidth = 1.8;
+        ctx.strokeRect(-9, headY - 3, 7, 5);
+        ctx.strokeRect(2, headY - 3, 7, 5);
+        ctx.beginPath();
+        ctx.moveTo(-2, headY - 1);
+        ctx.lineTo(2, headY - 1);
+        ctx.stroke();
+    }
+    if (c.beard) {
+        ctx.strokeStyle = '#2B2D42';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(0, headY + 4, 8, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // Floating Name Tag for Family Members (Always crisp & easy to spot on TV/Phone)
+    if (c.isFamily) {
+        ctx.save();
+        ctx.font = 'bold 12px Fredoka, sans-serif';
+        const tw = ctx.measureText(c.name).width + 14;
+        drawRoundedRect(c.x - tw / 2, c.y - 68 * scale, tw, 20, 8, 'rgba(255,253,247,0.9)', '#2B2D42', 2);
+        ctx.fillStyle = '#2B2D42';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.name, c.x, c.y - 54 * scale);
+        ctx.restore();
+    }
+
+    // Speech Bubble
+    if (c.speech && c.speechTimer > 0) {
+        ctx.save();
+        ctx.font = 'bold 13px Nunito, sans-serif';
+        const textW = ctx.measureText(c.speech).width + 22;
+        const bx = c.x - textW / 2;
+        const by = c.y - 102 * scale;
+        drawRoundedRect(bx, by, textW, 28, 12, '#FFFFFF', '#2B2D42', 2.5);
+        ctx.fillStyle = '#2B2D42';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.speech, c.x, by + 18);
+        ctx.restore();
+    }
+}
+
+// ============================================================================
+// CANVAS RESIZE, TOUCH / MOUSE PAN & ZOOM INTERACTIONS
+// ============================================================================
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+// Pointer Drag to Pan & Tap to Select Character
+canvas.addEventListener('pointerdown', e => {
+    sim.camera.isDragging = true;
+    sim.camera.dragStartX = e.clientX;
+    sim.camera.dragStartY = e.clientY;
+    sim.camera.startCamX = sim.camera.targetX;
+    sim.camera.startCamY = sim.camera.targetY;
+
+    // Check if user tapped directly on one of the 4 family members!
+    const worldX = (e.clientX - canvas.width / 2) / sim.camera.zoom + sim.camera.x;
+    const worldY = (e.clientY - canvas.height / 2) / sim.camera.zoom + sim.camera.y;
+
+    for (const f of FAMILY) {
+        if (f.state !== 'SLEEPING' && Math.hypot(worldX - f.x, worldY - (f.y - 25)) < 42) {
+            selectCharacter(f.id);
+            sim.camera.isDragging = false;
+            return;
+        }
+    }
+});
+
+canvas.addEventListener('pointermove', e => {
+    if (!sim.camera.isDragging || sim.mode !== 'PLAYING') return;
+    const dx = (e.clientX - sim.camera.dragStartX) / sim.camera.zoom;
+    const dy = (e.clientY - sim.camera.dragStartY) / sim.camera.zoom;
+    if (Math.hypot(dx, dy) > 8) {
+        sim.selectedCharId = null; // Free-pan unlocks character lock
+        document.getElementById('inspectorPill').classList.add('hidden');
+        renderCharacterDock();
+    }
+    sim.camera.targetX = Math.max(300, Math.min(WORLD_W - 300, sim.camera.startCamX - dx));
+    sim.camera.targetY = Math.max(250, Math.min(WORLD_H - 250, sim.camera.startCamY - dy));
+});
+
+canvas.addEventListener('pointerup', () => {
+    sim.camera.isDragging = false;
+});
+
+canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const zoomDelta = e.deltaY > 0 ? -0.08 : 0.08;
+    sim.camera.targetZoom = Math.max(0.45, Math.min(1.8, sim.camera.targetZoom + zoomDelta));
+}, { passive: false });
+
+// Main Animation Loop (60 FPS)
+let lastTime = performance.now();
+function gameLoop(now) {
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+
+    updateSimulation(dt);
+    drawWorld();
+
+    requestAnimationFrame(gameLoop);
+}
+
+window.onload = function () {
+    resizeCanvas();
+    initNPCs();
+    initEnvironmentDetails();
+    FAMILY.forEach(pickNextActivity);
+    renderCharacterDock();
+    requestAnimationFrame(gameLoop);
+};
+</script>
+</body>
+</html>
