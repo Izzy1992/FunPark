@@ -13,7 +13,7 @@
   --blue:#2a74d8; --mint:#3bb996; --gold:#f5b841; --coral:#eb6a7a;
 }
 *{box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#7eb977;font-family:"DM Sans",sans-serif;color:var(--ink)}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#4f8f54;font-family:"DM Sans",sans-serif;color:var(--ink)}
 #game{position:fixed;inset:0;width:100%;height:100%}
 canvas{display:block}
 
@@ -176,10 +176,10 @@ canvas{display:block}
     <h3 id="zoneTitle">Wonderland Resort</h3>
     <p id="zoneDesc">Three connected worlds of rides, water slides, and indoor fun.</p>
     <div class="statgrid">
-      <div class="stat"><b id="guestCount">30</b><span>Total Guests</span></div>
-      <div class="stat"><b id="rideCount">12</b><span>Attractions</span></div>
+      <div class="stat"><b id="guestCount">36</b><span>Total Guests</span></div>
+      <div class="stat"><b id="rideCount">13</b><span>Attractions</span></div>
       <div class="stat"><b id="ridesDone">0</b><span>Rides Enjoyed</span></div>
-      <div class="stat"><b id="parkMood">94%</b><span>Family Mood</span></div>
+      <div class="stat"><b id="parkMood">95%</b><span>Family Mood</span></div>
     </div>
   </div>
 
@@ -223,8 +223,6 @@ const IsoMath = {
 
 /* ============================================================================
    2. FLOOD-FILL WHITE BACKGROUND CLEANER FOR UPLOADED PNG ASSETS
-   Removes only outer white background connected to borders so interior whites
-   (carousel lights, foam, umbrellas, stone highlights) stay crisp!
    ============================================================================ */
 const SpriteCleaner = {
   cleanTexture(scene, rawKey, cleanKey) {
@@ -232,11 +230,9 @@ const SpriteCleaner = {
     const src = scene.textures.get(rawKey).getSourceImage();
     if (!src || !src.width) return false;
 
-    const w = src.width;
-    const h = src.height;
+    const w = src.width, h = src.height;
     const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(src, 0, 0);
 
@@ -248,8 +244,7 @@ const SpriteCleaner = {
 
     const isWhiteBg = (idx) => {
       const p = idx * 4;
-      const r = data[p], g = data[p + 1], b = data[p + 2];
-      return r > 236 && g > 236 && b > 236;
+      return data[p] > 235 && data[p + 1] > 235 && data[p + 2] > 235;
     };
 
     const pushIfBg = (x, y) => {
@@ -261,23 +256,17 @@ const SpriteCleaner = {
       }
     };
 
-    // Seed flood fill from all 4 image edges
     for (let x = 0; x < w; x++) { pushIfBg(x, 0); pushIfBg(x, h - 1); }
     for (let y = 0; y < h; y++) { pushIfBg(0, y); pushIfBg(w - 1, y); }
 
     while (sp > 0) {
       const idx = stack[--sp];
-      const p = idx * 4;
-      data[p + 3] = 0;
-      const x = idx % w;
-      const y = (idx / w) | 0;
-      pushIfBg(x + 1, y);
-      pushIfBg(x - 1, y);
-      pushIfBg(x, y + 1);
-      pushIfBg(x, y - 1);
+      data[idx * 4 + 3] = 0;
+      const x = idx % w, y = (idx / w) | 0;
+      pushIfBg(x + 1, y); pushIfBg(x - 1, y);
+      pushIfBg(x, y + 1); pushIfBg(x, y - 1);
     }
 
-    // Soft anti-alias edge feathering on pixels adjacent to removed background
     for (let y = 1; y < h - 1; y++) {
       for (let x = 1; x < w - 1; x++) {
         const idx = y * w + x;
@@ -285,9 +274,7 @@ const SpriteCleaner = {
         if (visited[idx - 1] || visited[idx + 1] || visited[idx - w] || visited[idx + w]) {
           const p = idx * 4;
           const lum = (data[p] + data[p + 1] + data[p + 2]) / 3;
-          if (lum > 215) {
-            data[p + 3] = Math.max(0, Math.min(255, (250 - lum) * 7));
-          }
+          if (lum > 215) data[p + 3] = Math.max(0, Math.min(255, (250 - lum) * 7));
         }
       }
     }
@@ -299,7 +286,7 @@ const SpriteCleaner = {
 };
 
 /* ============================================================================
-   3. ILLUSTRATED PORTRAIT STUDIO (NO EMOJIS)
+   3. ILLUSTRATED PORTRAIT STUDIO
    ============================================================================ */
 const PortraitStudio = {
   cache: {},
@@ -317,33 +304,21 @@ const PortraitStudio = {
     ctx.fillRect(0, 0, 84, 84);
 
     ctx.fillStyle = char.shirtHex;
-    ctx.beginPath();
-    ctx.roundRect(16, 56, 52, 34, 18);
-    ctx.fill();
-    ctx.strokeStyle = '#1d3547';
-    ctx.lineWidth = 2.2;
-    ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(16, 56, 52, 34, 18); ctx.fill();
+    ctx.strokeStyle = '#1d3547'; ctx.lineWidth = 2.2; ctx.stroke();
 
     ctx.fillStyle = char.skinHex;
     ctx.fillRect(35, 45, 14, 14);
 
     if (char.hijabHex) {
       ctx.fillStyle = char.hijabHex;
-      ctx.beginPath();
-      ctx.ellipse(42, 41, 24, 27, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#1d3547';
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(42, 41, 24, 27, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#1d3547'; ctx.lineWidth = 2.2; ctx.stroke();
     }
 
     ctx.fillStyle = char.skinHex;
-    ctx.beginPath();
-    ctx.ellipse(42, 34, 17, 19, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#1d3547';
-    ctx.lineWidth = 2.2;
-    ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(42, 34, 17, 19, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1d3547'; ctx.lineWidth = 2.2; ctx.stroke();
 
     ctx.fillStyle = 'rgba(235, 106, 122, 0.28)';
     ctx.beginPath();
@@ -352,31 +327,20 @@ const PortraitStudio = {
     ctx.fill();
 
     if (char.hijabHex) {
-      ctx.strokeStyle = '#1d3547';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(42, 35, 17.5, Math.PI * 0.85, Math.PI * 2.15);
-      ctx.stroke();
+      ctx.strokeStyle = '#1d3547'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(42, 35, 17.5, Math.PI * 0.85, Math.PI * 2.15); ctx.stroke();
     } else {
       ctx.fillStyle = char.hairHex;
       ctx.beginPath();
-      ctx.moveTo(24, 31);
-      ctx.quadraticCurveTo(25, 12, 42, 12);
-      ctx.quadraticCurveTo(59, 12, 60, 31);
-      ctx.quadraticCurveTo(52, 22, 42, 23);
-      ctx.quadraticCurveTo(32, 22, 24, 31);
-      ctx.fill();
-      ctx.strokeStyle = '#1d3547';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.moveTo(24, 31); ctx.quadraticCurveTo(25, 12, 42, 12);
+      ctx.quadraticCurveTo(59, 12, 60, 31); ctx.quadraticCurveTo(52, 22, 42, 23);
+      ctx.quadraticCurveTo(32, 22, 24, 31); ctx.fill();
+      ctx.strokeStyle = '#1d3547'; ctx.lineWidth = 2; ctx.stroke();
     }
 
     if (char.id === 'izmi') {
-      ctx.strokeStyle = '#2d262b';
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.arc(42, 37, 13, 0.25 * Math.PI, 0.75 * Math.PI);
-      ctx.stroke();
+      ctx.strokeStyle = '#2d262b'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.arc(42, 37, 13, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke();
     }
 
     ctx.fillStyle = '#182c3a';
@@ -390,12 +354,8 @@ const PortraitStudio = {
     ctx.arc(49.3, 32.1, 0.9, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = '#8b3e46';
-    ctx.lineWidth = 2.2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(42, 38.5, 5.5, 0.15 * Math.PI, 0.85 * Math.PI);
-    ctx.stroke();
+    ctx.strokeStyle = '#8b3e46'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(42, 38.5, 5.5, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
 
     this.cache[char.id] = c;
     return c;
@@ -435,13 +395,13 @@ const AudioEngine = {
 };
 
 /* ============================================================================
-   5. SIMULATION DATA, FAMILY & ATTRACTIONS
+   5. SIMULATION DATA, FAMILY & ATTRACTIONS (COMPACT 38x38 LUSH RESORT)
    ============================================================================ */
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const WEATHERS = ['SUNNY', 'BREEZY', 'GOLDEN'];
 
 const SimState = {
-  minutes: 570, // 09:30 AM
+  minutes: 570,
   day: 1,
   speed: 1,
   paused: false,
@@ -455,31 +415,31 @@ const FamilyData = [
   {
     id: 'izmi', name: 'Izmi', role: 'Father', age: 34,
     skin: 0xd1946e, skinHex: '#d1946e', shirt: 0x227c76, shirtHex: '#227c76',
-    pants: 0x2e4559, hair: 0x262226, hairHex: '#262226', scale: 1.06,
+    pants: 0x2e4559, hair: 0x262226, hairHex: '#262226', scale: 1.08,
     bgA: '#cdeee6', bgB: '#8fd3c2',
-    gx: 23.5, gy: 33.5, speed: 2.35,
+    gx: 20.5, gy: 28.5, speed: 2.35,
     energy: 94, happiness: 86, hunger: 82, thirst: 85,
-    action: 'Arriving at the Grand Entrance', state: 'idle',
+    action: 'Leading the family into Wonderland', state: 'idle',
     prefs: ['coaster', 'ferris', 'bistro', 'arcade', 'pool'],
     lines: ['Ready for the Sky Dragon?', 'Let us take a family photo!', 'What an awesome park!']
   },
   {
     id: 'anis', name: 'Anis', role: 'Mother', age: 31,
     skin: 0xdca480, skinHex: '#dca480', shirt: 0xe66f92, shirtHex: '#e66f92',
-    pants: 0x6e4459, hijab: 0xf4aec4, hijabHex: '#f4aec4', scale: 1.0,
+    pants: 0x6e4459, hijab: 0xf4aec4, hijabHex: '#f4aec4', scale: 1.02,
     bgA: '#fce2eb', bgB: '#f4b5ca',
-    gx: 24.3, gy: 33.2, speed: 2.25,
+    gx: 21.3, gy: 28.2, speed: 2.25,
     energy: 91, happiness: 88, hunger: 84, thirst: 86,
-    action: 'Admiring the castle entrance', state: 'idle',
+    action: 'Admiring the Grand Entrance', state: 'idle',
     prefs: ['pool', 'carousel', 'ferris', 'bistro', 'slides'],
     lines: ['The lagoon waterfall is gorgeous!', 'Stay together boys, have fun!', 'Let us relax at the bistro soon.']
   },
   {
     id: 'isaac', name: 'Isaac', age: 5, role: 'Son',
     skin: 0xd49772, skinHex: '#d49772', shirt: 0x3588e0, shirtHex: '#3588e0',
-    pants: 0xf0b83e, hair: 0x262226, hairHex: '#262226', scale: 0.78,
+    pants: 0xf0b83e, hair: 0x262226, hairHex: '#262226', scale: 0.80,
     bgA: '#dceeff', bgB: '#9ecbff',
-    gx: 23.2, gy: 34.4, speed: 2.6,
+    gx: 20.2, gy: 29.4, speed: 2.6,
     energy: 98, happiness: 95, hunger: 78, thirst: 80,
     action: 'Spotting the spiral water slides', state: 'idle',
     prefs: ['slides', 'coaster', 'arcade', 'carousel', 'pool'],
@@ -488,9 +448,9 @@ const FamilyData = [
   {
     id: 'hayyan', name: 'Hayyan', age: 4, role: 'Son',
     skin: 0xd99d78, skinHex: '#d99d78', shirt: 0xeb5b56, shirtHex: '#eb5b56',
-    pants: 0x3db589, hair: 0x262226, hairHex: '#262226', scale: 0.72,
+    pants: 0x3db589, hair: 0x262226, hairHex: '#262226', scale: 0.74,
     bgA: '#fff0d4', bgB: '#ffd089',
-    gx: 24.1, gy: 34.5, speed: 2.55,
+    gx: 21.1, gy: 29.5, speed: 2.55,
     energy: 100, happiness: 96, hunger: 80, thirst: 82,
     action: 'Hopping excitedly on the plaza', state: 'idle',
     prefs: ['slides', 'trampoline', 'softplay', 'carousel', 'pool'],
@@ -499,32 +459,33 @@ const FamilyData = [
 ];
 
 const ZonesConfig = {
-  all:    { gx: 22, gy: 22, zoom: 0.50, title: 'Wonderland Resort', desc: 'Three connected worlds of rides, water slides, and indoor fun.' },
-  theme:  { gx: 11, gy: 12, zoom: 0.80, title: 'Adventure Kingdom', desc: 'Sky Dragon Coaster, Wonder Wheel, Starlight Carousel & Bumper Cars.' },
-  water:  { gx: 11, gy: 32, zoom: 0.84, title: 'Splash Bay Water Park', desc: 'Spiral Tidal Slides, Waterfall Lagoon Pool & Tropical Sun Deck.' },
-  indoor: { gx: 33, gy: 26, zoom: 0.82, title: 'WonderDome Indoor Park', desc: 'Cutaway indoor hall with Pixel Arcade, Trampoline Court, Soft Play & Snack Bar.' }
+  all:    { gx: 19, gy: 19, zoom: 0.62, title: 'Wonderland Resort', desc: 'Three connected worlds of rides, water slides, and indoor fun.' },
+  theme:  { gx: 10, gy: 10, zoom: 0.88, title: 'Adventure Kingdom', desc: 'Sky Dragon Coaster, Wonder Wheel, Starlight Carousel & Bumper Cars.' },
+  water:  { gx: 10, gy: 27, zoom: 0.90, title: 'Splash Bay Water Park', desc: 'Spiral Tidal Slides, Waterfall Lagoon Pool & Tropical Sun Deck.' },
+  indoor: { gx: 28, gy: 22, zoom: 0.88, title: 'WonderDome Indoor Park', desc: 'Cutaway indoor hall with Pixel Arcade, Trampoline Court, Soft Play & Snack Bar.' }
 };
 
 const AttractionsData = [
   // Outdoor Theme Park
-  { id: 'coaster',    name: 'Sky Dragon Coaster',   zone: 'theme',  gx: 8,  gy: 9,  queueGx: 11, queueGy: 13, type: 'coaster',    duration: 9,  thrill: 24, energyCost: 9 },
-  { id: 'ferris',     name: 'Wonder Wheel',         zone: 'theme',  gx: 17, gy: 7,  queueGx: 17, queueGy: 12, type: 'ferris',     duration: 10, thrill: 16, energyCost: 4 },
-  { id: 'carousel',   name: 'Starlight Carousel',   zone: 'theme',  gx: 14, gy: 16, queueGx: 16, queueGy: 19, type: 'carousel',   duration: 8,  thrill: 15, energyCost: 4 },
-  { id: 'bumper',     name: 'Turbo Bumper Cars',    zone: 'theme',  gx: 6,  gy: 17, queueGx: 9,  queueGy: 18, type: 'bumper',     duration: 8,  thrill: 18, energyCost: 6 },
+  { id: 'coaster',    name: 'Sky Dragon Coaster',   zone: 'theme',  gx: 7,  gy: 8,  queueGx: 10, queueGy: 12, type: 'coaster',    duration: 9,  thrill: 24, energyCost: 9 },
+  { id: 'ferris',     name: 'Wonder Wheel',         zone: 'theme',  gx: 15, gy: 6,  queueGx: 15, queueGy: 11, type: 'ferris',     duration: 10, thrill: 16, energyCost: 4 },
+  { id: 'carousel',   name: 'Starlight Carousel',   zone: 'theme',  gx: 13, gy: 14, queueGx: 15, queueGy: 17, type: 'carousel',   duration: 8,  thrill: 15, energyCost: 4 },
+  { id: 'bumper',     name: 'Turbo Bumper Cars',    zone: 'theme',  gx: 6,  gy: 15, queueGx: 9,  queueGy: 16, type: 'bumper',     duration: 8,  thrill: 18, energyCost: 6 },
+  { id: 'minitrain',  name: 'Wonderland Express',   zone: 'theme',  gx: 11, gy: 18, queueGx: 13, queueGy: 18, type: 'minitrain',  duration: 9,  thrill: 14, energyCost: 3 },
 
   // Water Park
-  { id: 'slides',     name: 'Spiral Tidal Slides',  zone: 'water',  gx: 7,  gy: 28, queueGx: 11, queueGy: 30, type: 'slides',     duration: 8,  thrill: 22, energyCost: 8 },
-  { id: 'pool',       name: 'Waterfall Lagoon Pool',zone: 'water',  gx: 14, gy: 35, queueGx: 16, queueGy: 31, type: 'pool',       duration: 12, thrill: 18, energyCost: 5 },
+  { id: 'slides',     name: 'Spiral Tidal Slides',  zone: 'water',  gx: 6,  gy: 24, queueGx: 10, queueGy: 25, type: 'slides',     duration: 8,  thrill: 22, energyCost: 8 },
+  { id: 'pool',       name: 'Waterfall Lagoon Pool',zone: 'water',  gx: 12, gy: 30, queueGx: 14, queueGy: 26, type: 'pool',       duration: 12, thrill: 18, energyCost: 5 },
 
-  // Indoor Cutaway Hall (4 distinct interactive activity stations inside indoor_hall.png!)
-  { id: 'arcade',     name: 'Pixel Arcade Machines',zone: 'indoor', gx: 30, gy: 24, queueGx: 31, queueGy: 26, type: 'indoor_act', duration: 9,  thrill: 18, energyCost: 4 },
-  { id: 'trampoline', name: 'SkyBounce Trampolines',zone: 'indoor', gx: 34, gy: 22, queueGx: 33, queueGy: 25, type: 'indoor_act', duration: 8,  thrill: 22, energyCost: 9 },
-  { id: 'softplay',   name: 'Cloud Nine Soft Play', zone: 'indoor', gx: 37, gy: 25, queueGx: 35, queueGy: 27, type: 'indoor_act', duration: 10, thrill: 20, energyCost: 6 },
-  { id: 'snackbar',   name: 'WonderDome Snack Bar', zone: 'indoor', gx: 35, gy: 29, queueGx: 33, queueGy: 29, type: 'food',       duration: 7,  thrill: 12, energyCost: -16 },
+  // Indoor Cutaway Hall (4 distinct interactive zones inside indoor_hall.png)
+  { id: 'arcade',     name: 'Pixel Arcade Machines',zone: 'indoor', gx: 26, gy: 20, queueGx: 27, queueGy: 22, type: 'indoor_act', duration: 9,  thrill: 18, energyCost: 4 },
+  { id: 'trampoline', name: 'SkyBounce Trampolines',zone: 'indoor', gx: 29, gy: 19, queueGx: 28, queueGy: 21, type: 'indoor_act', duration: 8,  thrill: 22, energyCost: 9 },
+  { id: 'softplay',   name: 'Cloud Nine Soft Play', zone: 'indoor', gx: 31, gy: 21, queueGx: 30, queueGy: 23, type: 'indoor_act', duration: 10, thrill: 20, energyCost: 6 },
+  { id: 'snackbar',   name: 'WonderDome Snack Bar', zone: 'indoor', gx: 30, gy: 24, queueGx: 28, queueGy: 24, type: 'food',       duration: 7,  thrill: 12, energyCost: -16 },
 
   // Dining & Landmarks
-  { id: 'bistro',     name: 'Garden Bistro Cafe',   zone: 'plaza',  gx: 28, gy: 13, queueGx: 26, queueGy: 16, type: 'food',       duration: 8,  thrill: 14, energyCost: -22 },
-  { id: 'plaza_fount',name: 'Crystal Plaza Fountain',zone:'plaza',  gx: 22, gy: 22, queueGx: 21, queueGy: 23, type: 'rest',       duration: 6,  thrill: 10, energyCost: -10 }
+  { id: 'bistro',     name: 'Garden Bistro Cafe',   zone: 'plaza',  gx: 24, gy: 11, queueGx: 22, queueGy: 14, type: 'food',       duration: 8,  thrill: 14, energyCost: -22 },
+  { id: 'plaza_fount',name: 'Crystal Plaza Fountain',zone:'plaza',  gx: 19, gy: 19, queueGx: 18, queueGy: 20, type: 'rest',       duration: 6,  thrill: 10, energyCost: -10 }
 ];
 
 /* ============================================================================
@@ -535,30 +496,22 @@ class ParkScene extends Phaser.Scene {
     super('ParkScene');
     this.actors = [];
     this.lampGlows = [];
+    this.smokePuffs = [];
+    this.balloons = [];
     this.dragState = null;
     this.lastUiSync = 0;
     this.animClock = 0;
   }
 
   preload() {
-    // Load all 8 uploaded PNG sprites from your GitHub assets/ folder
     const assets = [
-      'grand_entrance',
-      'ferris_wheel',
-      'carousel',
-      'coaster_station',
-      'water_slides',
-      'lagoon_pool',
-      'indoor_hall',
-      'garden_bistro'
+      'grand_entrance', 'ferris_wheel', 'carousel', 'coaster_station',
+      'water_slides', 'lagoon_pool', 'indoor_hall', 'garden_bistro'
     ];
-    assets.forEach(key => {
-      this.load.image(key + '_raw', `assets/${key}.png`);
-    });
+    assets.forEach(key => this.load.image(key + '_raw', `assets/${key}.png`));
   }
 
   create() {
-    // Strip outer white backgrounds automatically while preserving interior whites
     const keys = [
       'grand_entrance', 'ferris_wheel', 'carousel', 'coaster_station',
       'water_slides', 'lagoon_pool', 'indoor_hall', 'garden_bistro'
@@ -568,13 +521,14 @@ class ParkScene extends Phaser.Scene {
       this.loadedSprites[k] = SpriteCleaner.cleanTexture(this, k + '_raw', k);
     });
 
-    this.cameras.main.setBackgroundColor('#7cb875');
-    this.cameras.main.setBounds(-1850, -320, 3700, 2250);
+    this.cameras.main.setBackgroundColor('#4f8f54');
+    this.cameras.main.setBounds(-1600, -280, 3200, 1950);
 
     this.buildTerrainAndPaths();
     this.placeLandmarksAndAttractions();
-    this.buildSceneryFoliage();
+    this.buildDenseFoliageAndProps();
     this.spawnCharacters();
+    this.spawnSkyBalloons();
     this.buildNightLighting();
     this.setupInput();
     this.setupUI();
@@ -585,66 +539,64 @@ class ParkScene extends Phaser.Scene {
   }
 
   /* --------------------------------------------------------------------------
-     6A. LUSH ISOMETRIC TERRAIN, BRICK BORDERED PATHWAYS & PLAZAS
+     6A. COMPACT 38x38 TERRAIN, TERRACOTTA WALKWAYS & WATER CHANNELS
      -------------------------------------------------------------------------- */
   buildTerrainAndPaths() {
     const g = this.add.graphics().setDepth(0);
 
-    // 3D Earth Cliff Base
-    const c0 = IsoMath.toScreen(0, 0);
-    const c1 = IsoMath.toScreen(46, 0);
-    const c2 = IsoMath.toScreen(46, 46);
-    const c3 = IsoMath.toScreen(0, 46);
+    // Outer forest backdrop around the resort island
+    const o0 = IsoMath.toScreen(-12, -12), o1 = IsoMath.toScreen(50, -12);
+    const o2 = IsoMath.toScreen(50, 50),   o3 = IsoMath.toScreen(-12, 50);
+    g.fillStyle(0x4f8f54, 1);
+    g.fillPoints([o0, o1, o2, o3], true);
+
+    // 3D Earth Cliff Base for the 38x38 Resort Island
+    const c0 = IsoMath.toScreen(0, 0),  c1 = IsoMath.toScreen(38, 0);
+    const c2 = IsoMath.toScreen(38, 38), c3 = IsoMath.toScreen(0, 38);
 
     g.fillStyle(0x6b533e, 1);
-    g.fillPoints([c3, c2, { x: c2.x, y: c2.y + 38 }, { x: c3.x, y: c3.y + 38 }], true);
+    g.fillPoints([c3, c2, { x: c2.x, y: c2.y + 34 }, { x: c3.x, y: c3.y + 34 }], true);
     g.fillStyle(0x544030, 1);
-    g.fillPoints([c2, c1, { x: c1.x, y: c1.y + 38 }, { x: c2.x, y: c2.y + 38 }], true);
+    g.fillPoints([c2, c1, { x: c1.x, y: c1.y + 34 }, { x: c2.x, y: c2.y + 34 }], true);
 
-    // Rich Grass Ground
-    g.fillStyle(0x82c272, 1);
+    // Rich Park Lawn
+    g.fillStyle(0x7cc06e, 1);
     g.fillPoints([c0, c1, c2, c3], true);
 
     // Zone Ground Pads
-    this.drawIsoRect(g, 2, 2, 20, 20, 0x8ccb79, 0x6ea85e, 2);     // Outdoor Theme Park
-    this.drawIsoRect(g, 2, 24, 19, 19, 0xf2dfb8, 0xd4be92, 2);    // Water Park Tropical Deck
-    this.drawIsoRect(g, 25, 19, 18, 17, 0xdde5ec, 0xb8c7d4, 2);   // Indoor Park Courtyard
+    this.drawIsoRect(g, 1.5, 1.5, 16.5, 16.5, 0x89cb76, 0x6aa35a, 2);   // Theme Park Meadow
+    this.drawIsoRect(g, 1.5, 20.5, 16.5, 15.5, 0xf2dfb8, 0xd4be92, 2);  // Water Park Sand Deck
+    this.drawIsoRect(g, 21.5, 16.5, 14.5, 13.5, 0xdde5ec, 0xb8c7d4, 2); // Indoor Park Courtyard
 
-    // Subtle Isometric Lawn Grid
-    g.lineStyle(1, 0x67a65c, 0.2);
-    for (let i = 0; i <= 46; i += 2) {
-      const a = IsoMath.toScreen(i, 0), b = IsoMath.toScreen(i, 46);
+    // Subtle Isometric Lawn Tiles
+    g.lineStyle(1, 0x62a157, 0.2);
+    for (let i = 0; i <= 38; i += 2) {
+      const a = IsoMath.toScreen(i, 0), b = IsoMath.toScreen(i, 38);
       g.lineBetween(a.x, a.y, b.x, b.y);
-      const c = IsoMath.toScreen(0, i), d = IsoMath.toScreen(46, i);
+      const c = IsoMath.toScreen(0, i), d = IsoMath.toScreen(38, i);
       g.lineBetween(c.x, c.y, d.x, d.y);
     }
 
-    // Warm Sandstone Brick Pathways with Terracotta Trim
+    // Warm Sandstone Brick Pathways with Terracotta Borders
     const paths = [
-      // Grand Entrance to Central Plaza
-      [23, 24, 2.4, 15],
-      // Central Plaza Hub
-      [19, 19, 6.5, 6.5],
-      // Theme Park Promenade
-      [11, 13, 8, 2.2],
-      [16, 12, 2.2, 8],
-      [9, 18, 10, 2.2],
-      // Water Park Promenade
-      [11, 29, 8, 2.2],
-      [15, 24, 2.2, 8],
-      // WonderDome Indoor Hall Promenade
-      [25.5, 22, 6, 2.4],
-      // Garden Bistro Walkway
-      [25.5, 16, 3.5, 3]
+      [20, 21, 2.4, 13],     // Grand Entrance to Central Plaza
+      [16.5, 16.5, 5.5, 5.5],// Central Plaza Hub
+      [10, 11.5, 7, 2.2],    // Theme Park North Promenade
+      [14.5, 10, 2.2, 7.5],  // Wonder Wheel Avenue
+      [8.5, 16, 9, 2.2],     // Carousel & Bumper Promenade
+      [10, 24.5, 7, 2.2],    // Water Park Promenade
+      [13.5, 21, 2.2, 6.5],  // Lagoon Pool Walkway
+      [21.5, 19.5, 5, 2.4],  // WonderDome Indoor Hall Entrance
+      [21.5, 13.5, 3.5, 3]   // Garden Bistro Patio Path
     ];
     paths.forEach(([x, y, w, h]) => this.drawIsoRect(g, x, y, w, h, 0xefe3c8, 0xc99e74, 2));
 
     // Decorative Central Plaza Fountain
-    const fp = IsoMath.toScreen(22, 22);
-    const fg = this.add.graphics().setDepth(IsoMath.depth(22, 22, 12));
-    fg.fillStyle(0xdbe4ea, 1); fg.fillEllipse(fp.x, fp.y, 74, 37);
-    fg.lineStyle(2, 0x94a3b8, 1); fg.strokeEllipse(fp.x, fp.y, 74, 37);
-    fg.fillStyle(0x38bdf8, 1); fg.fillEllipse(fp.x, fp.y - 2, 60, 28);
+    const fp = IsoMath.toScreen(19, 19);
+    const fg = this.add.graphics().setDepth(IsoMath.depth(19, 19, 14));
+    fg.fillStyle(0xdbe4ea, 1); fg.fillEllipse(fp.x, fp.y, 76, 38);
+    fg.lineStyle(2, 0x94a3b8, 1); fg.strokeEllipse(fp.x, fp.y, 76, 38);
+    fg.fillStyle(0x38bdf8, 1); fg.fillEllipse(fp.x, fp.y - 2, 62, 29);
     fg.fillStyle(0xffffff, 0.9); fg.fillEllipse(fp.x, fp.y - 14, 16, 9);
     this.tweens.add({ targets: fg, y: -2.5, duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
@@ -665,99 +617,143 @@ class ParkScene extends Phaser.Scene {
   }
 
   /* --------------------------------------------------------------------------
-     6B. PLACE YOUR UPLOADED 3D ISOMETRIC PNG ASSETS + LIVE ANIMATIONS
+     6B. LARGE-SCALE PNG LANDMARKS + KINETIC RIDE OVERLAYS
      -------------------------------------------------------------------------- */
   placeLandmarksAndAttractions() {
-    // Helper to place a cleaned PNG sprite on the isometric grid with proper depth
     const placeSprite = (key, gx, gy, targetWidth, offsetY = 0, layer = 30) => {
       const p = IsoMath.toScreen(gx, gy);
       if (this.loadedSprites[key]) {
         const img = this.add.image(p.x, p.y + offsetY, key);
-        const scale = targetWidth / img.width;
-        img.setScale(scale);
+        img.setScale(targetWidth / img.width);
         img.setDepth(IsoMath.depth(gx, gy, layer));
         return img;
       }
       return null;
     };
 
-    // 1. GRAND ENTRANCE GATEHOUSE
-    placeSprite('grand_entrance', 24, 39, 310, -48, 35);
-    this.addLabel(24, 42.5, 'GRAND ENTRANCE');
+    // 1. GRAND ENTRANCE CASTLE GATEHOUSE (Scaled 1.5x larger)
+    placeSprite('grand_entrance', 21, 33, 440, -64, 36);
+    this.addLabel(21, 36.8, 'GRAND ENTRANCE');
 
-    // 2. SKY DRAGON COASTER STATION + LIVE ELEVATED LOOP & 3-CAR TRAIN
-    placeSprite('coaster_station', 8, 9, 290, -28, 32);
-    this.buildCoasterLoopAndTrain(8, 9);
-    this.addLabel(8, 13.5, 'SKY DRAGON COASTER');
+    // 2. SKY DRAGON COASTER STATION + FULL 3D TRACK & 4-CAR TRAIN
+    placeSprite('coaster_station', 7, 8, 410, -38, 32);
+    this.buildCoasterLoopAndTrain(7, 8);
+    this.addLabel(7, 12.2, 'SKY DRAGON COASTER');
 
-    // 3. WONDER WHEEL + GLOWING ROTATING CABINS OVERLAY
-    const wheelSprite = placeSprite('ferris_wheel', 17, 7, 295, -62, 34);
-    this.ferrisCenter = IsoMath.toScreen(17, 7, 86);
-    this.ferrisOverlay = this.add.graphics().setDepth(IsoMath.depth(17, 7, 38));
-    this.addLabel(17, 11.5, 'WONDER WHEEL');
+    // 3. WONDER WHEEL + LIVE SPINNING SPOKED WHEEL & SWINGING GONDOLAS
+    placeSprite('ferris_wheel', 15, 6, 420, -84, 32);
+    this.ferrisCenter = IsoMath.toScreen(15, 6, 114);
+    this.ferrisWheelGfx = this.add.graphics().setDepth(IsoMath.depth(15, 6, 38));
+    this.addLabel(15, 10.5, 'WONDER WHEEL');
 
-    // 4. STARLIGHT CAROUSEL + TWINKLING MARQUEE LIGHTS
-    placeSprite('carousel', 14, 16, 225, -36, 33);
-    this.carouselCenter = IsoMath.toScreen(14, 16, 42);
-    this.carouselLights = this.add.graphics().setDepth(IsoMath.depth(14, 16, 36));
-    this.addLabel(14, 19.5, 'STARLIGHT CAROUSEL');
+    // 4. STARLIGHT CAROUSEL + LIVE ORBITING HORSES & CANOPY BULBS
+    placeSprite('carousel', 13, 14, 320, -48, 33);
+    this.carouselCenter = IsoMath.toScreen(13, 14, 24);
+    this.carouselAnimGfx = this.add.graphics().setDepth(IsoMath.depth(13, 14, 37));
+    this.addLabel(13, 17.5, 'STARLIGHT CAROUSEL');
 
-    // 5. TURBO BUMPER CARS ARENA (Live moving bumper cars)
-    const bpGfx = this.add.graphics().setDepth(IsoMath.depth(6, 17, 15));
-    this.drawIsoRect(bpGfx, 4, 15, 4.4, 4.4, 0x475569, 0xfacc15, 3);
-    this.bumperCenter = { gx: 6.2, gy: 17.2 };
-    this.bumperCarsGfx = this.add.graphics().setDepth(IsoMath.depth(6, 17, 22));
-    this.addLabel(6.2, 20.2, 'TURBO BUMPER CARS');
+    // 5. TURBO BUMPER CARS PAVILION (Roofed Arena + Live Bumping Cars)
+    this.buildBumperCarPavilion(6, 15);
+    this.addLabel(6, 18.2, 'TURBO BUMPER CARS');
 
-    // 6. SPIRAL WATER SLIDES TOWER + ANIMATED SLIDING CHARACTERS
-    placeSprite('water_slides', 7, 28, 310, -56, 34);
-    this.addLabel(7, 32.5, 'SPIRAL TIDAL SLIDES');
+    // 6. WONDERLAND EXPRESS MINI TRAIN LOOP
+    this.buildMiniTrainLoop(11, 18);
 
-    // 7. WATERFALL LAGOON POOL + ANIMATED WATER RIPPLES
-    placeSprite('lagoon_pool', 14, 35, 340, -18, 28);
-    this.lagoonRipples = this.add.graphics().setDepth(IsoMath.depth(14, 35, 31));
-    this.addLabel(14, 39.5, 'WATERFALL LAGOON POOL');
+    // 7. SPIRAL WATER SLIDES TOWER + LIVE FLOWING WATER STREAMS & SPLASHES
+    placeSprite('water_slides', 6, 24, 430, -76, 34);
+    this.slideBase = IsoMath.toScreen(6, 24);
+    this.slideWaterGfx = this.add.graphics().setDepth(IsoMath.depth(6, 24, 38));
+    this.addLabel(6, 28.5, 'SPIRAL TIDAL SLIDES');
 
-    // 8. WONDERDOME CUTAWAY INDOOR HALL (Arcade, Trampolines, Soft Play & Snack Bar)
-    placeSprite('indoor_hall', 34, 25, 440, -34, 26);
-    this.addLabel(34, 31.2, 'WONDERDOME INDOOR PARK');
+    // 8. WATERFALL LAGOON POOL + ANIMATED WATERFALL & SHIMMERING WAVES
+    placeSprite('lagoon_pool', 12, 30, 470, -24, 28);
+    this.lagoonCenter = IsoMath.toScreen(12, 30);
+    this.lagoonAnimGfx = this.add.graphics().setDepth(IsoMath.depth(12, 30, 32));
+    this.addLabel(12, 34.8, 'WATERFALL LAGOON POOL');
 
-    // 9. GARDEN BISTRO CAFE
-    placeSprite('garden_bistro', 28, 13, 280, -32, 32);
-    this.addLabel(28, 17, 'GARDEN BISTRO CAFE');
+    // 9. WONDERDOME CUTAWAY INDOOR HALL (Large 580px Cutaway Hall)
+    placeSprite('indoor_hall', 28, 21, 580, -44, 26);
+    this.indoorCenter = IsoMath.toScreen(28, 21);
+    this.indoorNeonGfx = this.add.graphics().setDepth(IsoMath.depth(28, 21, 30));
+    this.addLabel(28, 27.5, 'WONDERDOME INDOOR PARK');
+
+    // 10. GARDEN BISTRO CAFE + RISING CHIMNEY SMOKE
+    placeSprite('garden_bistro', 24, 11, 390, -44, 32);
+    this.bistroChimney = IsoMath.toScreen(24, 11, 115);
+    this.addLabel(24, 15.2, 'GARDEN BISTRO CAFE');
   }
 
   buildCoasterLoopAndTrain(cx, cy) {
     const trackPts = [];
-    const steps = 90;
+    const steps = 100;
     for (let i = 0; i <= steps; i++) {
       const a = (i / steps) * Math.PI * 2;
-      const gx = cx - 1.5 + Math.cos(a) * 4.6;
-      const gy = cy - 1.2 + Math.sin(a) * 3.5;
-      const gz = 38 + Math.sin(a * 2) * 22;
+      const gx = cx - 1.2 + Math.cos(a) * 5.2;
+      const gy = cy - 1.0 + Math.sin(a) * 4.0;
+      const gz = 46 + Math.sin(a * 2) * 28;
       trackPts.push({ gx, gy, gz, s: IsoMath.toScreen(gx, gy, gz), gnd: IsoMath.toScreen(gx, gy, 0) });
     }
     const tg = this.add.graphics().setDepth(IsoMath.depth(cx - 2, cy - 2, 24));
-    for (let i = 0; i < steps; i += 9) {
-      tg.lineStyle(3, 0x94a3b8, 0.85);
+    for (let i = 0; i < steps; i += 8) {
+      tg.lineStyle(3.5, 0x94a3b8, 0.9);
       tg.lineBetween(trackPts[i].gnd.x, trackPts[i].gnd.y, trackPts[i].s.x, trackPts[i].s.y);
     }
-    tg.lineStyle(8, 0x334155, 1);
+    tg.lineStyle(9, 0x334155, 1);
     tg.strokePoints(trackPts.map(p => p.s), false);
-    tg.lineStyle(4, 0xef4444, 1);
+    tg.lineStyle(5, 0xef4444, 1);
     tg.strokePoints(trackPts.map(p => p.s), false);
 
     this.coasterTrack = trackPts;
-    this.coasterCars = [0, 1, 2].map(idx => {
-      const car = this.add.container(0, 0).setDepth(IsoMath.depth(cx, cy, 48));
+    this.coasterCars = [0, 1, 2, 3].map(idx => {
+      const car = this.add.container(0, 0).setDepth(IsoMath.depth(cx, cy, 50));
       const cg = this.add.graphics();
       cg.fillStyle(idx === 0 ? 0xfacc15 : 0xef4444, 1);
-      cg.fillRoundedRect(-9, -6, 18, 11, 4);
+      cg.fillRoundedRect(-10, -7, 20, 12, 4);
       cg.lineStyle(1.5, 0x1e293b, 1);
-      cg.strokeRoundedRect(-9, -6, 18, 11, 4);
+      cg.strokeRoundedRect(-10, -7, 20, 12, 4);
       car.add(cg);
       return car;
     });
+  }
+
+  buildBumperCarPavilion(gx, gy) {
+    const g = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 18));
+    this.drawIsoRect(g, gx - 2.3, gy - 2.3, 4.6, 4.6, 0x334155, 0xfacc15, 3);
+    // Corner posts & striped awning canopy
+    [[-2.2, -2.2], [2.2, -2.2], [2.2, 2.2], [-2.2, 2.2]].forEach(([dx, dy]) => {
+      const b = IsoMath.toScreen(gx + dx, gy + dy, 0);
+      const t = IsoMath.toScreen(gx + dx, gy + dy, 34);
+      g.lineStyle(4, 0xe2e8f0, 1);
+      g.lineBetween(b.x, b.y, t.x, t.y);
+    });
+    const top = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 42));
+    const r0 = IsoMath.toScreen(gx - 2.4, gy - 2.4, 34);
+    const r1 = IsoMath.toScreen(gx + 2.4, gy - 2.4, 34);
+    const r2 = IsoMath.toScreen(gx + 2.4, gy + 2.4, 34);
+    const r3 = IsoMath.toScreen(gx - 2.4, gy + 2.4, 34);
+    const peak = IsoMath.toScreen(gx, gy, 52);
+    top.fillStyle(0xf43f5e, 0.88);
+    top.fillPoints([r0, r1, peak], true);
+    top.fillPoints([r2, r3, peak], true);
+    top.fillStyle(0xfef08a, 0.88);
+    top.fillPoints([r1, r2, peak], true);
+    top.fillPoints([r3, r0, peak], true);
+
+    this.bumperCenter = { gx, gy };
+    this.bumperCarsGfx = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 24));
+  }
+
+  buildMiniTrainLoop(gx, gy) {
+    const g = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 11));
+    const pts = [];
+    for (let i = 0; i <= 50; i++) {
+      const a = (i / 50) * Math.PI * 2;
+      pts.push(IsoMath.toScreen(gx + Math.cos(a) * 3.4, gy + Math.sin(a) * 2.1));
+    }
+    g.lineStyle(5, 0x78350f, 1);
+    g.strokePoints(pts, false);
+    this.trainCenter = { gx, gy };
+    this.trainGfx = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 24));
   }
 
   addLabel(gx, gy, text) {
@@ -765,65 +761,90 @@ class ParkScene extends Phaser.Scene {
     this.add.text(p.x, p.y, text, {
       fontFamily: 'DM Sans', fontSize: '10px', fontStyle: '800',
       color: '#173245', stroke: '#ffffff', strokeThickness: 3.5
-    }).setOrigin(0.5).setDepth(IsoMath.depth(gx, gy, 65));
+    }).setOrigin(0.5).setDepth(IsoMath.depth(gx, gy, 68));
   }
 
   /* --------------------------------------------------------------------------
-     6C. DENSE LANDSCAPING: PINE & OAK TREES, FLOWERBEDS, BENCHES & LAMPS
+     6C. DENSE LANDSCAPING: 130+ TREES, HEDGES, LOUNGERS & GLOWING LAMPS
      -------------------------------------------------------------------------- */
-  buildSceneryFoliage() {
-    const treeCoords = [
-      [2,2],[4,2],[7,2],[12,2],[21,3],[23,6],[25,9],[32,10],[35,13],[39,16],[42,18],
-      [2,12],[2,16],[2,21],[3,23],[19,25],[20,30],[20,36],[3,36],[4,41],[9,42],[15,42],
-      [28,39],[33,39],[38,38],[42,34],[43,28],[20,14],[22,17],[18,22],[26,28]
+  buildDenseFoliageAndProps() {
+    const occupied = [
+      [7,8,5.5], [15,6,5], [13,14,4.2], [6,15,4], [11,18,3.8],
+      [6,24,5], [12,30,5.5], [28,21,6.8], [24,11,4.8], [21,33,5], [19,19,4.2]
     ];
-    treeCoords.forEach(([gx, gy], idx) => {
-      const p = IsoMath.toScreen(gx, gy);
-      const k = 0.92 + (idx % 3) * 0.14;
-      const g = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 25));
-      g.fillStyle(0x1f3d2b, 0.24);
-      g.fillEllipse(p.x, p.y + 2, 32 * k, 15 * k);
-      g.fillStyle(0x784f34, 1);
-      g.fillRoundedRect(p.x - 3 * k, p.y - 21 * k, 6 * k, 23 * k, 2);
-      const greens = [0x35965e, 0x4cb06d, 0x67c278];
-      g.fillStyle(greens[idx % 3], 1);
-      g.fillCircle(p.x, p.y - 30 * k, 16 * k);
-      g.fillCircle(p.x - 10 * k, p.y - 24 * k, 11 * k);
-      g.fillCircle(p.x + 10 * k, p.y - 24 * k, 11 * k);
-      g.lineStyle(1.5, 0x22543a, 0.55);
-      g.strokeCircle(p.x, p.y - 30 * k, 16 * k);
-    });
+    const isClear = (gx, gy) => {
+      if (gx > 19.5 && gx < 22.8 && gy > 20 && gy < 34) return false;
+      if (gx > 9.5 && gx < 17 && gy > 11 && gy < 18) return false;
+      if (gx > 9.5 && gx < 16 && gy > 23.5 && gy < 27) return false;
+      return !occupied.some(([ox, oy, r]) => Math.hypot(gx - ox, gy - oy) < r);
+    };
 
-    // Flower planters & glowing night lamps along avenues
-    [[18.5,18.5],[25.5,18.5],[18.5,25.5],[25.5,25.5],[21.5,29],[21.5,35],[13,20],[16,24]].forEach(([gx, gy]) => {
+    // Dense forest perimeter + interior park tree clusters
+    let idx = 0;
+    for (let gy = -4; gy <= 42; gy += 2.3) {
+      for (let gx = -4; gx <= 42; gx += 2.3) {
+        const jx = gx + Math.sin(idx * 1.7) * 0.7;
+        const jy = gy + Math.cos(idx * 2.3) * 0.7;
+        idx++;
+        const onBorder = jx < 1.5 || jx > 36.5 || jy < 1.5 || jy > 36.5;
+        if (!onBorder && (!isClear(jx, jy) || idx % 3 !== 0)) continue;
+
+        const p = IsoMath.toScreen(jx, jy);
+        const k = onBorder ? 1.15 + (idx % 3) * 0.16 : 0.88 + (idx % 3) * 0.14;
+        const g = this.add.graphics().setDepth(IsoMath.depth(jx, jy, 25));
+        g.fillStyle(0x1b3826, 0.25);
+        g.fillEllipse(p.x, p.y + 2, 34 * k, 15 * k);
+        g.fillStyle(0x784f34, 1);
+        g.fillRoundedRect(p.x - 3 * k, p.y - 22 * k, 6 * k, 24 * k, 2);
+
+        if (idx % 2 === 0) {
+          // Layered Pine Tree (RCT Classic style)
+          const pineCols = [0x2d7a4d, 0x3b945e, 0x4db072];
+          for (let tier = 0; tier < 3; tier++) {
+            const w = (18 - tier * 4) * k;
+            const y0 = p.y - (16 + tier * 10) * k;
+            g.fillStyle(pineCols[tier], 1);
+            g.fillTriangle(p.x - w, y0, p.x + w, y0, p.x, y0 - 16 * k);
+          }
+        } else {
+          // Lush Round Oak Tree
+          const greens = [0x35965e, 0x4cb06d, 0x67c278];
+          g.fillStyle(greens[idx % 3], 1);
+          g.fillCircle(p.x, p.y - 30 * k, 16 * k);
+          g.fillCircle(p.x - 10 * k, p.y - 24 * k, 11 * k);
+          g.fillCircle(p.x + 10 * k, p.y - 24 * k, 11 * k);
+        }
+      }
+    }
+
+    // Flowerbeds & Glowing Night Lamp Posts
+    [[16.5,16.5],[22.5,16.5],[16.5,22.5],[22.5,22.5],[19.5,26],[19.5,31],[12,17],[14,22]].forEach(([gx, gy]) => {
       const p = IsoMath.toScreen(gx, gy);
       const fg = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 9));
-      fg.fillStyle(0x4d9454, 1); fg.fillEllipse(p.x, p.y, 26, 13);
+      fg.fillStyle(0x4d9454, 1); fg.fillEllipse(p.x, p.y, 28, 14);
       [0xff758f, 0xffd166, 0xffffff, 0x70d6ff].forEach((col, i) => {
         const a = (i / 4) * Math.PI * 2;
         fg.fillStyle(col, 1);
-        fg.fillCircle(p.x + Math.cos(a) * 7, p.y + Math.sin(a) * 3.5, 2.6);
+        fg.fillCircle(p.x + Math.cos(a) * 7.5, p.y + Math.sin(a) * 3.8, 2.8);
       });
 
       const lg = this.add.graphics().setDepth(IsoMath.depth(gx + 0.5, gy, 24));
-      lg.lineStyle(2.5, 0x334155, 1); lg.lineBetween(p.x + 14, p.y, p.x + 14, p.y - 26);
-      lg.fillStyle(0xfef08a, 1); lg.fillCircle(p.x + 14, p.y - 28, 3.8);
-      const glow = this.add.circle(p.x + 14, p.y - 25, 26, 0xfde047, 0).setDepth(IsoMath.depth(gx, gy, 90));
+      lg.lineStyle(2.5, 0x334155, 1); lg.lineBetween(p.x + 14, p.y, p.x + 14, p.y - 28);
+      lg.fillStyle(0xfef08a, 1); lg.fillCircle(p.x + 14, p.y - 30, 4);
+      const glow = this.add.circle(p.x + 14, p.y - 26, 28, 0xfde047, 0).setDepth(IsoMath.depth(gx, gy, 90));
       this.lampGlows.push(glow);
     });
   }
 
   /* --------------------------------------------------------------------------
-     6D. ILLUSTRATED FAMILY & PARK VISITORS
+     6D. ILLUSTRATED FAMILY, PARK VISITORS & DRIFTING SKY BALLOONS
      -------------------------------------------------------------------------- */
   spawnCharacters() {
-    FamilyData.forEach(member => {
-      this.actors.push(this.createActorEntity(member, false));
-    });
+    FamilyData.forEach(member => this.actors.push(this.createActorEntity(member, false)));
 
     const shirts = [0xf59e0b, 0x3b82f6, 0x10b981, 0x8b5cf6, 0xec4899, 0x06b6d4, 0xf97316];
     const skins = [0xd89b74, 0xf1c29b, 0xa87152, 0xe5b28a];
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 32; i++) {
       const isChild = i % 4 === 0;
       const g = {
         id: 'guest_' + i,
@@ -834,13 +855,15 @@ class ParkScene extends Phaser.Scene {
         shirt: shirts[i % shirts.length],
         pants: 0x334155,
         hair: 0x1e293b,
-        scale: isChild ? 0.76 : 0.96,
-        gx: 9 + (i * 4.7) % 27,
-        gy: 11 + (i * 6.3) % 26,
+        scale: isChild ? 0.78 : 0.98,
+        gx: 8 + (i * 4.3) % 23,
+        gy: 9 + (i * 5.9) % 22,
         speed: isChild ? 2.3 : 2.0,
         energy: 85, happiness: 85, hunger: 85, thirst: 85,
         action: 'Exploring the park', state: 'idle',
-        prefs: AttractionsData.map(a => a.id)
+        prefs: AttractionsData.map(a => a.id),
+        hasBalloon: i % 5 === 0,
+        balloonColor: shirts[(i + 2) % shirts.length]
       };
       this.actors.push(this.createActorEntity(g, true));
     }
@@ -894,6 +917,14 @@ class ParkScene extends Phaser.Scene {
     g.arc(0, -29 * k, 2.5 * k, 0.2, Math.PI - 0.2);
     g.strokePath();
 
+    // Festive helium balloon on select park guests
+    if (data.hasBalloon) {
+      g.lineStyle(1, 0xffffff, 0.85);
+      g.lineBetween(10 * k, -16 * k, 14 * k, -42 * k);
+      g.fillStyle(data.balloonColor, 1);
+      g.fillCircle(14 * k, -47 * k, 6 * k);
+    }
+
     body.add(g);
     root.add(body);
 
@@ -921,8 +952,26 @@ class ParkScene extends Phaser.Scene {
     return {
       data, isGuest, root, body, bubble, bTxt,
       targetGx: null, targetGy: null, targetAttr: null,
-      timer: Math.random() * 1.8, walkPhase: Math.random() * 6, speechTimer: 0
+      timer: Math.random() * 1.6, walkPhase: Math.random() * 6, speechTimer: 0
     };
+  }
+
+  spawnSkyBalloons() {
+    // Drifting colorful hot air balloons high above the park (like RCT Touch!)
+    [[5, 14, 0xf43f5e, 0xfacc15], [22, 6, 0x38bdf8, 0x34d399]].forEach(([gx, gy, c1, c2], idx) => {
+      const p = IsoMath.toScreen(gx, gy, 210);
+      const c = this.add.container(p.x, p.y).setDepth(90000);
+      const g = this.add.graphics();
+      g.fillStyle(0x1e293b, 0.14); g.fillEllipse(0, 210, 36, 16);
+      g.fillStyle(0x78350f, 1); g.fillRoundedRect(-7, 22, 14, 10, 2);
+      g.lineStyle(1.5, 0x475569, 1);
+      g.lineBetween(-5, 22, -10, 10); g.lineBetween(5, 22, 10, 10);
+      g.fillStyle(c1, 1); g.fillCircle(0, -8, 24);
+      g.fillStyle(c2, 1); g.fillEllipse(0, -8, 14, 46);
+      g.lineStyle(1.5, 0x1e293b, 0.7); g.strokeCircle(0, -8, 24);
+      c.add(g);
+      this.balloons.push({ c, baseX: p.x, baseY: p.y, phase: idx * 3.1 });
+    });
   }
 
   buildNightLighting() {
@@ -932,7 +981,7 @@ class ParkScene extends Phaser.Scene {
   }
 
   /* --------------------------------------------------------------------------
-     6E. SIMULATION LOOP: ATTRACTIONS, AI & FAMILY INTERACTIONS
+     6E. SIMULATION LOOP: KINETIC RIDES, WATER EFFECTS, AI & INTERACTIONS
      -------------------------------------------------------------------------- */
   update(time, delta) {
     const dt = Math.min(delta / 1000, 0.05) * (SimState.paused ? 0 : SimState.speed);
@@ -948,7 +997,7 @@ class ParkScene extends Phaser.Scene {
     }
 
     this.updateLighting();
-    this.animateRides();
+    this.animateRidesAndWorld(dt);
     this.actors.forEach(a => this.updateActorAI(a, dt));
     this.checkFamilyInteractions(dt);
 
@@ -970,72 +1019,131 @@ class ParkScene extends Phaser.Scene {
     this.lampGlows.forEach(g => g.setAlpha(lampAlpha));
   }
 
-  animateRides() {
+  animateRidesAndWorld(dt) {
     const t = this.animClock;
 
-    // 1. Coaster Train
+    // 1. Sky Dragon Coaster 4-Car Train
     if (this.coasterTrack && this.coasterCars) {
       const len = this.coasterTrack.length - 1;
       this.coasterCars.forEach((car, idx) => {
-        const u = ((t * 0.14 - idx * 0.025) % 1 + 1) % 1;
+        const u = ((t * 0.16 - idx * 0.025) % 1 + 1) % 1;
         const p = this.coasterTrack[Math.floor(u * len)];
         car.setPosition(p.s.x, p.s.y - 4);
-        car.setDepth(IsoMath.depth(p.gx, p.gy, 50));
+        car.setDepth(IsoMath.depth(p.gx, p.gy, 52));
       });
     }
 
-    // 2. Ferris Wheel Orbiting Gondola Lights
-    if (this.ferrisOverlay && this.ferrisCenter) {
-      const g = this.ferrisOverlay;
+    // 2. Wonder Wheel Live Rotating Spoked Rim & Swinging Gondolas
+    if (this.ferrisWheelGfx && this.ferrisCenter) {
+      const g = this.ferrisWheelGfx;
       g.clear();
-      const R = 74;
+      const R = 82;
+      g.lineStyle(3, 0xffffff, 0.55);
+      g.strokeEllipse(this.ferrisCenter.x, this.ferrisCenter.y, R * 1.45, R * 1.9);
       for (let i = 0; i < 12; i++) {
-        const a = t * 0.32 + (i * Math.PI * 2) / 12;
-        const gx = this.ferrisCenter.x + Math.cos(a) * R * 0.85;
-        const gy = this.ferrisCenter.y + Math.sin(a) * R;
-        g.fillStyle(0xfef08a, 0.85);
-        g.fillCircle(gx, gy, 3.2);
+        const a = t * 0.42 + (i * Math.PI * 2) / 12;
+        const gx = this.ferrisCenter.x + Math.cos(a) * R * 0.72;
+        const gy = this.ferrisCenter.y + Math.sin(a) * R * 0.95;
+        g.lineStyle(1.5, 0xfef08a, 0.5);
+        g.lineBetween(this.ferrisCenter.x, this.ferrisCenter.y, gx, gy);
+        g.fillStyle([0xf43f5e, 0xfacc15, 0x38bdf8, 0x34d399][i % 4], 0.95);
+        g.fillRoundedRect(gx - 6, gy - 2, 12, 10, 3);
+        g.lineStyle(1.2, 0x1e293b, 0.8);
+        g.strokeRoundedRect(gx - 6, gy - 2, 12, 10, 3);
       }
     }
 
-    // 3. Carousel Twinkling Lights
-    if (this.carouselLights && this.carouselCenter) {
-      const g = this.carouselLights;
+    // 3. Starlight Carousel Orbiting Bobbing Horses & Lights
+    if (this.carouselAnimGfx && this.carouselCenter) {
+      const g = this.carouselAnimGfx;
       g.clear();
-      for (let i = 0; i < 8; i++) {
-        const a = t * 1.2 + (i * Math.PI * 2) / 8;
-        const lx = this.carouselCenter.x + Math.cos(a) * 52;
-        const ly = this.carouselCenter.y + Math.sin(a) * 24;
-        g.fillStyle(i % 2 === 0 ? 0xfef08a : 0xfda4af, 0.9);
-        g.fillCircle(lx, ly, 3);
+      for (let i = 0; i < 6; i++) {
+        const a = t * 1.35 + (i * Math.PI * 2) / 6;
+        const hx = this.carouselCenter.x + Math.cos(a) * 44;
+        const hy = this.carouselCenter.y + Math.sin(a) * 20 + Math.sin(t * 4.5 + i) * 4;
+        g.fillStyle([0xffffff, 0xfda4af, 0xfef08a][i % 3], 0.95);
+        g.fillRoundedRect(hx - 6, hy - 5, 12, 8, 3);
+        g.lineStyle(1.2, 0x1e293b, 0.8);
+        g.strokeRoundedRect(hx - 6, hy - 5, 12, 8, 3);
       }
     }
 
-    // 4. Bumper Cars Arena
+    // 4. Turbo Bumper Cars Arena
     if (this.bumperCarsGfx && this.bumperCenter) {
       const g = this.bumperCarsGfx;
       g.clear();
-      for (let i = 0; i < 4; i++) {
-        const bx = this.bumperCenter.gx + Math.sin(t * 1.4 + i * 1.7) * 1.3;
-        const by = this.bumperCenter.gy + Math.cos(t * 1.2 + i * 2.1) * 1.3;
+      for (let i = 0; i < 5; i++) {
+        const bx = this.bumperCenter.gx + Math.sin(t * 1.5 + i * 1.6) * 1.5;
+        const by = this.bumperCenter.gy + Math.cos(t * 1.3 + i * 2.1) * 1.5;
         const bp = IsoMath.toScreen(bx, by, 4);
-        g.fillStyle([0xef4444, 0x3b82f6, 0xfacc15, 0x10b981][i], 1);
-        g.fillEllipse(bp.x, bp.y, 14, 9);
+        g.fillStyle([0xef4444, 0x3b82f6, 0xfacc15, 0x10b981, 0xa855f7][i], 1);
+        g.fillEllipse(bp.x, bp.y, 15, 9);
         g.lineStyle(1.5, 0x0f172a, 1);
-        g.strokeEllipse(bp.x, bp.y, 14, 9);
+        g.strokeEllipse(bp.x, bp.y, 15, 9);
       }
     }
 
-    // 5. Lagoon Pool Water Ripples
-    if (this.lagoonRipples) {
-      const g = this.lagoonRipples;
+    // 5. Wonderland Express Mini Train
+    if (this.trainGfx && this.trainCenter) {
+      const g = this.trainGfx;
       g.clear();
-      g.lineStyle(1.5, 0xffffff, 0.5);
-      for (let i = 0; i < 4; i++) {
-        const wave = Math.sin(t * 2.2 + i) * 7;
-        const wp = IsoMath.toScreen(13.2 + i * 0.6, 34.2 + i * 0.5, 2);
-        g.strokeEllipse(wp.x + wave, wp.y, 20, 9);
+      for (let c = 0; c < 4; c++) {
+        const a = t * 0.72 - c * 0.25;
+        const tp = IsoMath.toScreen(this.trainCenter.gx + Math.cos(a) * 3.4, this.trainCenter.gy + Math.sin(a) * 2.1, 4);
+        g.fillStyle(c === 0 ? 0xdc2626 : [0xfacc15, 0x2563eb, 0x10b981][c % 3], 1);
+        g.fillRoundedRect(tp.x - 8, tp.y - 6, 16, 10, 3);
+        g.lineStyle(1.2, 0x1e293b, 1);
+        g.strokeRoundedRect(tp.x - 8, tp.y - 6, 16, 10, 3);
       }
+    }
+
+    // 6. Spiral Water Slides Flowing Foam & Landing Splashes
+    if (this.slideWaterGfx && this.slideBase) {
+      const g = this.slideWaterGfx;
+      g.clear();
+      const pulse = (t * 2.4) % 1;
+      g.fillStyle(0xffffff, 0.75);
+      g.fillCircle(this.slideBase.x - 16, this.slideBase.y + 42, 6 + pulse * 14);
+      g.fillCircle(this.slideBase.x + 18, this.slideBase.y + 44, 6 + ((pulse + 0.5) % 1) * 14);
+    }
+
+    // 7. Lagoon Pool Waterfall Mist & Animated Ripples
+    if (this.lagoonAnimGfx && this.lagoonCenter) {
+      const g = this.lagoonAnimGfx;
+      g.clear();
+      g.lineStyle(1.8, 0xffffff, 0.55);
+      for (let i = 0; i < 5; i++) {
+        const wave = Math.sin(t * 2.4 + i) * 8;
+        const r = 14 + ((t * 14 + i * 6) % 18);
+        g.strokeEllipse(this.lagoonCenter.x - 10 + wave, this.lagoonCenter.y + 8, r * 1.8, r * 0.8);
+      }
+      // Waterfall mist sparkles
+      g.fillStyle(0xffffff, 0.75);
+      for (let m = 0; m < 6; m++) {
+        const my = ((t * 28 + m * 9) % 34);
+        g.fillCircle(this.lagoonCenter.x + 36 + Math.sin(t * 5 + m) * 5, this.lagoonCenter.y - 44 + my, 3);
+      }
+    }
+
+    // 8. Drifting Hot Air Balloons
+    this.balloons.forEach(b => {
+      b.c.x = b.baseX + Math.sin(t * 0.22 + b.phase) * 95;
+      b.c.y = b.baseY + Math.cos(t * 0.35 + b.phase) * 24;
+    });
+
+    // 9. Bistro Chimney Smoke Puffs
+    if (dt > 0 && this.bistroChimney && Math.random() < dt * 2.5) {
+      const puff = this.add.circle(this.bistroChimney.x, this.bistroChimney.y, 4, 0xffffff, 0.65)
+        .setDepth(IsoMath.depth(24, 11, 55));
+      this.tweens.add({
+        targets: puff,
+        x: puff.x + 18,
+        y: puff.y - 38,
+        scale: 2.6,
+        alpha: 0,
+        duration: 2400,
+        onComplete: () => puff.destroy()
+      });
     }
   }
 
@@ -1061,7 +1169,7 @@ class ParkScene extends Phaser.Scene {
           const prog = 1 - Math.max(0, actor.timer / attr.duration);
           const sGx = attr.gx + Math.sin(prog * Math.PI * 3) * 0.9;
           const sGy = attr.gy + prog * 2.6;
-          const sGz = (1 - prog) * 54;
+          const sGz = (1 - prog) * 62;
           const sp = IsoMath.toScreen(sGx, sGy, sGz);
           actor.root.setPosition(sp.x, sp.y);
           actor.root.setDepth(IsoMath.depth(sGx, sGy, 48));
@@ -1075,7 +1183,6 @@ class ParkScene extends Phaser.Scene {
         } else if (attr.type === 'coaster' || attr.type === 'ferris') {
           actor.root.setVisible(false);
         } else {
-          // Visible activity bounce inside Arcade, Trampolines, Soft Play, Bistro
           actor.body.y = Math.abs(Math.sin(this.animClock * 6)) * -4.5;
         }
       }
@@ -1236,7 +1343,7 @@ class ParkScene extends Phaser.Scene {
 
     this.input.on('wheel', (p, go, dx, dy) => {
       const cam = this.cameras.main;
-      cam.setZoom(Phaser.Math.Clamp(cam.zoom - dy * 0.0006, 0.34, 1.45));
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom - dy * 0.0006, 0.38, 1.55));
     });
   }
 
@@ -1297,7 +1404,7 @@ class ParkScene extends Phaser.Scene {
     const actor = this.actors.find(a => a.data.id === id);
     if (!actor) return;
     this.cameras.main.startFollow(actor.root, true, 0.08, 0.08);
-    this.cameras.main.zoomTo(1.0, 350);
+    this.cameras.main.zoomTo(1.08, 350);
     this.renderFamilyDock();
     this.updateInspector();
     this.showToast('Following ' + actor.data.name);
@@ -1424,7 +1531,7 @@ class ParkScene extends Phaser.Scene {
 new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
-  backgroundColor: '#7cb875',
+  backgroundColor: '#4f8f54',
   scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
   render: { antialias: true, roundPixels: false },
   scene: [ParkScene]
