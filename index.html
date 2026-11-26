@@ -155,8 +155,8 @@ canvas{display:block}
   </div>
   <div class="panel controls">
     <button class="btn" id="pauseBtn" title="Pause / Resume">II</button>
-    <button class="btn active" data-speed="1">1x</button>
-    <button class="btn" data-speed="2">2x</button>
+    <button class="btn" data-speed="1">1x</button>
+    <button class="btn active" data-speed="2">2x</button>
     <button class="btn" data-speed="4">4x</button>
     <button class="btn icon" id="audioBtn" title="Toggle Audio">SFX Off</button>
     <button class="btn icon" id="overviewBtn" title="Full Park View">Overview</button>
@@ -222,7 +222,7 @@ const IsoMath = {
 };
 
 /* ============================================================================
-   2. SPRITE CLEANER + LAYER SLICER (SEPARATES MOVING PARTS FROM STATIC PNGS)
+   2. SPRITE CLEANER + LAYER SLICER
    ============================================================================ */
 const SpriteProcessor = {
   cleanTexture(scene, rawKey, cleanKey) {
@@ -284,7 +284,6 @@ const SpriteProcessor = {
     return canvas;
   },
 
-  // Slices a cleaned sprite into vertical bands (top, middle, bottom) so middle parts can animate!
   sliceBands(scene, cleanCanvas, prefix, topPct, botPct) {
     if (!cleanCanvas) return false;
     const w = cleanCanvas.width, h = cleanCanvas.height;
@@ -423,7 +422,7 @@ const WEATHERS = ['SUNNY', 'BREEZY', 'GOLDEN'];
 const SimState = {
   minutes: 570,
   day: 1,
-  speed: 1,
+  speed: 2, // Start at lively 2x pace so park motion is immediately vivid
   paused: false,
   selectedId: null,
   zone: 'all',
@@ -435,9 +434,9 @@ const FamilyData = [
   {
     id: 'izmi', name: 'Izmi', role: 'Father', age: 34,
     skin: 0xd1946e, skinHex: '#d1946e', shirt: 0x227c76, shirtHex: '#227c76',
-    pants: 0x2e4559, hair: 0x262226, hairHex: '#262226', scale: 1.08,
+    pants: 0x2e4559, hair: 0x262226, hairHex: '#262226', scale: 1.12,
     bgA: '#cdeee6', bgB: '#8fd3c2',
-    gx: 20.5, gy: 28.5, speed: 2.35,
+    gx: 20.5, gy: 28.5, speed: 2.5,
     energy: 94, happiness: 86, hunger: 82, thirst: 85,
     action: 'Leading the family into Wonderland', state: 'idle',
     prefs: ['coaster', 'ferris', 'bistro', 'arcade', 'pool'],
@@ -446,9 +445,9 @@ const FamilyData = [
   {
     id: 'anis', name: 'Anis', role: 'Mother', age: 31,
     skin: 0xdca480, skinHex: '#dca480', shirt: 0xe66f92, shirtHex: '#e66f92',
-    pants: 0x6e4459, hijab: 0xf4aec4, hijabHex: '#f4aec4', scale: 1.02,
+    pants: 0x6e4459, hijab: 0xf4aec4, hijabHex: '#f4aec4', scale: 1.06,
     bgA: '#fce2eb', bgB: '#f4b5ca',
-    gx: 21.3, gy: 28.2, speed: 2.25,
+    gx: 21.3, gy: 28.2, speed: 2.4,
     energy: 91, happiness: 88, hunger: 84, thirst: 86,
     action: 'Admiring the Grand Entrance', state: 'idle',
     prefs: ['pool', 'carousel', 'ferris', 'bistro', 'slides'],
@@ -457,9 +456,9 @@ const FamilyData = [
   {
     id: 'isaac', name: 'Isaac', age: 5, role: 'Son',
     skin: 0xd49772, skinHex: '#d49772', shirt: 0x3588e0, shirtHex: '#3588e0',
-    pants: 0xf0b83e, hair: 0x262226, hairHex: '#262226', scale: 0.80,
+    pants: 0xf0b83e, hair: 0x262226, hairHex: '#262226', scale: 0.84,
     bgA: '#dceeff', bgB: '#9ecbff',
-    gx: 20.2, gy: 29.4, speed: 2.6,
+    gx: 20.2, gy: 29.4, speed: 2.75,
     energy: 98, happiness: 95, hunger: 78, thirst: 80,
     action: 'Spotting the spiral water slides', state: 'idle',
     prefs: ['slides', 'coaster', 'arcade', 'carousel', 'pool'],
@@ -468,9 +467,9 @@ const FamilyData = [
   {
     id: 'hayyan', name: 'Hayyan', age: 4, role: 'Son',
     skin: 0xd99d78, skinHex: '#d99d78', shirt: 0xeb5b56, shirtHex: '#eb5b56',
-    pants: 0x3db589, hair: 0x262226, hairHex: '#262226', scale: 0.74,
+    pants: 0x3db589, hair: 0x262226, hairHex: '#262226', scale: 0.78,
     bgA: '#fff0d4', bgB: '#ffd089',
-    gx: 21.1, gy: 29.5, speed: 2.55,
+    gx: 21.1, gy: 29.5, speed: 2.7,
     energy: 100, happiness: 96, hunger: 80, thirst: 82,
     action: 'Hopping excitedly on the plaza', state: 'idle',
     prefs: ['slides', 'trampoline', 'softplay', 'carousel', 'pool'],
@@ -479,10 +478,10 @@ const FamilyData = [
 ];
 
 const ZonesConfig = {
-  all:    { gx: 19, gy: 19, zoom: 0.62, title: 'Wonderland Resort', desc: 'Three connected worlds of rides, water slides, and indoor fun.' },
-  theme:  { gx: 10, gy: 10, zoom: 0.88, title: 'Adventure Kingdom', desc: 'Sky Dragon Coaster, Wonder Wheel, Starlight Carousel & Bumper Cars.' },
-  water:  { gx: 10, gy: 27, zoom: 0.90, title: 'Splash Bay Water Park', desc: 'Spiral Tidal Slides, Waterfall Lagoon Pool & Tropical Sun Deck.' },
-  indoor: { gx: 28, gy: 22, zoom: 0.88, title: 'WonderDome Indoor Park', desc: 'Cutaway indoor hall with Pixel Arcade, Trampoline Court, Soft Play & Snack Bar.' }
+  all:    { gx: 19, gy: 19, zoom: 0.65, title: 'Wonderland Resort', desc: 'Three connected worlds of rides, water slides, and indoor fun.' },
+  theme:  { gx: 10, gy: 10, zoom: 0.92, title: 'Adventure Kingdom', desc: 'Sky Dragon Coaster, Wonder Wheel, Starlight Carousel & Bumper Cars.' },
+  water:  { gx: 10, gy: 27, zoom: 0.94, title: 'Splash Bay Water Park', desc: 'Spiral Tidal Slides, Waterfall Lagoon Pool & Tropical Sun Deck.' },
+  indoor: { gx: 28, gy: 22, zoom: 0.92, title: 'WonderDome Indoor Park', desc: 'Cutaway indoor hall with Pixel Arcade, Trampoline Court, Soft Play & Snack Bar.' }
 };
 
 const AttractionsData = [
@@ -533,7 +532,6 @@ class ParkScene extends Phaser.Scene {
     keys.forEach(k => {
       const cleaned = SpriteProcessor.cleanTexture(this, k + '_raw', k);
       this.loadedSprites[k] = Boolean(cleaned);
-      // Slice Carousel into Canopy (top), Animated Horse Ring (mid), Platform (bot)
       if (k === 'carousel' && cleaned) {
         SpriteProcessor.sliceBands(this, cleaned, 'carousel', 0.50, 0.78);
       }
@@ -603,7 +601,6 @@ class ParkScene extends Phaser.Scene {
     ];
     paths.forEach(([x, y, w, h]) => this.drawIsoRect(g, x, y, w, h, 0xefe3c8, 0xc99e74, 2));
 
-    // Animated Central Plaza Fountain with pulsing water jets
     const fp = IsoMath.toScreen(19, 19);
     const fg = this.add.graphics().setDepth(IsoMath.depth(19, 19, 14));
     fg.fillStyle(0xdbe4ea, 1); fg.fillEllipse(fp.x, fp.y, 76, 38);
@@ -629,7 +626,7 @@ class ParkScene extends Phaser.Scene {
   }
 
   /* --------------------------------------------------------------------------
-     6B. MULTI-LAYER KINETIC RIDES & ANIMATED LANDMARKS
+     6B. MULTI-LAYER KINETIC RIDES & PERSPECTIVE-MATCHED ANIMATIONS
      -------------------------------------------------------------------------- */
   placeAnimatedLandmarks() {
     const placeSprite = (key, gx, gy, targetWidth, offsetY = 0, layer = 30) => {
@@ -658,55 +655,20 @@ class ParkScene extends Phaser.Scene {
     this.buildCoasterLoopAndTrain(7, 8);
     this.addLabel(7, 12.2, 'SKY DRAGON COASTER');
 
-    // 3. WONDER WHEEL: Base Image + TRUE SPINNING SPOKED WHEEL & SWINGING GONDOLAS
-    const wheelImg = placeSprite('ferris_wheel', 15, 6, 420, -84, 30);
-    const wc = wheelImg ? { x: wheelImg.x + 6, y: wheelImg.y - 26 } : IsoMath.toScreen(15, 6, 114);
-    this.ferrisCenter = wc;
-    // Create a rotating container for the wheel rim, spokes, and counter-rotating gondolas!
-    this.ferrisRotor = this.add.container(wc.x, wc.y).setDepth(IsoMath.depth(15, 6, 35));
-    const rim = this.add.graphics();
-    const R = 104;
-    rim.lineStyle(5, 0x3b82f6, 0.9);
-    rim.strokeCircle(0, 0, R);
-    rim.lineStyle(3, 0xfef08a, 0.95);
-    rim.strokeCircle(0, 0, R * 0.72);
-    for (let i = 0; i < 12; i++) {
-      const a = (i * Math.PI * 2) / 12;
-      rim.lineStyle(2.5, 0xf59e0b, 0.85);
-      rim.lineBetween(0, 0, Math.cos(a) * R, Math.sin(a) * R);
-    }
-    this.ferrisRotor.add(rim);
-
-    // 12 Gondolas attached to wheel rim that stay upright as the wheel spins!
-    this.ferrisGondolas = [];
-    const podCols = [0xef4444, 0xfacc15, 0x3b82f6, 0x10b981];
-    for (let i = 0; i < 12; i++) {
-      const a = (i * Math.PI * 2) / 12;
-      const pod = this.add.container(Math.cos(a) * R, Math.sin(a) * R);
-      const pg = this.add.graphics();
-      pg.fillStyle(podCols[i % 4], 1);
-      pg.fillRoundedRect(-11, -4, 22, 16, 5);
-      pg.lineStyle(2, 0x1e293b, 1);
-      pg.strokeRoundedRect(-11, -4, 22, 16, 5);
-      pg.fillStyle(0xe0f2fe, 1);
-      pg.fillRect(-7, -1, 14, 6);
-      pod.add(pg);
-      this.ferrisRotor.add(pod);
-      this.ferrisGondolas.push(pod);
-    }
-    // Center star hub cap
-    const hub = this.add.graphics().setDepth(IsoMath.depth(15, 6, 37));
-    hub.fillStyle(0xfacc15, 1); hub.fillCircle(wc.x, wc.y, 16);
-    hub.lineStyle(2.5, 0x1e293b, 1); hub.strokeCircle(wc.x, wc.y, 16);
+    // 3. WONDER WHEEL: Perspective-Matched Tilted Elliptical Gondolas + Pulsing Star Hub
+    const wheelImg = placeSprite('ferris_wheel', 15, 6, 420, -84, 32);
+    this.ferrisImg = wheelImg;
+    this.ferrisCenter = wheelImg ? { x: wheelImg.x - 2, y: wheelImg.y - 26 } : IsoMath.toScreen(15, 6, 114);
+    this.ferrisPodsGfx = this.add.graphics().setDepth(IsoMath.depth(15, 6, 37));
     this.addLabel(15, 10.5, 'WONDER WHEEL');
 
-    // 4. STARLIGHT CAROUSEL: Sliced 3-Layer Animation (Platform + Animated Horses + Canopy!)
+    // 4. STARLIGHT CAROUSEL: Sliced 3-Layer Animation (Platform + Animated Horses + Canopy)
     const cp = IsoMath.toScreen(13, 14);
     if (this.textures.exists('carousel_bot')) {
       const sc = 320 / this.textures.get('carousel_bot').getSourceImage().width;
-      const cBot = this.add.image(cp.x, cp.y - 48, 'carousel_bot').setScale(sc).setDepth(IsoMath.depth(13, 14, 31));
+      this.add.image(cp.x, cp.y - 48, 'carousel_bot').setScale(sc).setDepth(IsoMath.depth(13, 14, 31));
       this.carouselMid = this.add.image(cp.x, cp.y - 48, 'carousel_mid').setScale(sc).setDepth(IsoMath.depth(13, 14, 33));
-      const cTop = this.add.image(cp.x, cp.y - 48, 'carousel_top').setScale(sc).setDepth(IsoMath.depth(13, 14, 35));
+      this.add.image(cp.x, cp.y - 48, 'carousel_top').setScale(sc).setDepth(IsoMath.depth(13, 14, 35));
       this.carouselBasePos = { x: cp.x, y: cp.y - 48 };
     } else {
       placeSprite('carousel', 13, 14, 320, -48, 33);
@@ -715,8 +677,8 @@ class ParkScene extends Phaser.Scene {
     this.carouselLights = this.add.graphics().setDepth(IsoMath.depth(13, 14, 38));
     this.addLabel(13, 17.5, 'STARLIGHT CAROUSEL');
 
-    // 5. TURBO BUMPER CARS PAVILION
-    this.buildBumperCarPavilion(6, 15);
+    // 5. OPEN-AIR TURBO BUMPER CARS ARENA (No solid roof hiding the cars!)
+    this.buildOpenBumperCarArena(6, 15);
     this.addLabel(6, 18.2, 'TURBO BUMPER CARS');
 
     // 6. WONDERLAND EXPRESS MINI TRAIN
@@ -771,39 +733,31 @@ class ParkScene extends Phaser.Scene {
       const car = this.add.container(0, 0).setDepth(IsoMath.depth(cx, cy, 52));
       const cg = this.add.graphics();
       cg.fillStyle(idx === 0 ? 0xfacc15 : 0xef4444, 1);
-      cg.fillRoundedRect(-11, -7, 22, 13, 4);
+      cg.fillRoundedRect(-12, -8, 24, 14, 4);
       cg.lineStyle(1.8, 0x1e293b, 1);
-      cg.strokeRoundedRect(-11, -7, 22, 13, 4);
-      // Tiny passenger heads visible inside the coaster cars!
+      cg.strokeRoundedRect(-12, -8, 24, 14, 4);
       cg.fillStyle(0xfde68a, 1);
-      cg.fillCircle(-4, -8, 3);
-      cg.fillCircle(4, -8, 3);
+      cg.fillCircle(-4, -9, 3.2);
+      cg.fillCircle(4, -9, 3.2);
       car.add(cg);
       return car;
     });
   }
 
-  buildBumperCarPavilion(gx, gy) {
+  buildOpenBumperCarArena(gx, gy) {
     const g = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 18));
-    this.drawIsoRect(g, gx - 2.3, gy - 2.3, 4.6, 4.6, 0x334155, 0xfacc15, 3);
-    [[-2.2, -2.2], [2.2, -2.2], [2.2, 2.2], [-2.2, 2.2]].forEach(([dx, dy]) => {
+    // Metallic bumper floor with neon safety border & corner light pylons
+    this.drawIsoRect(g, gx - 2.4, gy - 2.4, 4.8, 4.8, 0x1e293b, 0x94a3b8, 4);
+    this.drawIsoRect(g, gx - 2.1, gy - 2.1, 4.2, 4.2, 0x334155, 0x38bdf8, 2);
+
+    [[-2.3, -2.3], [2.3, -2.3], [2.3, 2.3], [-2.3, 2.3]].forEach(([dx, dy], idx) => {
       const b = IsoMath.toScreen(gx + dx, gy + dy, 0);
-      const t = IsoMath.toScreen(gx + dx, gy + dy, 34);
-      g.lineStyle(4, 0xe2e8f0, 1);
+      const t = IsoMath.toScreen(gx + dx, gy + dy, 26);
+      g.lineStyle(4, 0x64748b, 1);
       g.lineBetween(b.x, b.y, t.x, t.y);
+      g.fillStyle([0xf43f5e, 0xfacc15, 0x38bdf8, 0x34d399][idx], 1);
+      g.fillCircle(t.x, t.y, 5);
     });
-    const top = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 42));
-    const r0 = IsoMath.toScreen(gx - 2.4, gy - 2.4, 34);
-    const r1 = IsoMath.toScreen(gx + 2.4, gy - 2.4, 34);
-    const r2 = IsoMath.toScreen(gx + 2.4, gy + 2.4, 34);
-    const r3 = IsoMath.toScreen(gx - 2.4, gy + 2.4, 34);
-    const peak = IsoMath.toScreen(gx, gy, 52);
-    top.fillStyle(0xf43f5e, 0.72);
-    top.fillPoints([r0, r1, peak], true);
-    top.fillPoints([r2, r3, peak], true);
-    top.fillStyle(0xfef08a, 0.72);
-    top.fillPoints([r1, r2, peak], true);
-    top.fillPoints([r3, r0, peak], true);
 
     this.bumperCenter = { gx, gy };
     this.bumperCarsGfx = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 24));
@@ -917,10 +871,10 @@ class ParkScene extends Phaser.Scene {
         shirt: shirts[i % shirts.length],
         pants: 0x334155,
         hair: 0x1e293b,
-        scale: isChild ? 0.78 : 0.98,
+        scale: isChild ? 0.80 : 1.0,
         gx: 8 + (i * 4.3) % 23,
         gy: 9 + (i * 5.9) % 22,
-        speed: isChild ? 2.3 : 2.0,
+        speed: isChild ? 2.4 : 2.1,
         energy: 85, happiness: 85, hunger: 85, thirst: 85,
         action: 'Exploring the park', state: 'idle',
         prefs: AttractionsData.map(a => a.id),
@@ -1013,7 +967,7 @@ class ParkScene extends Phaser.Scene {
     return {
       data, isGuest, root, body, bubble, bTxt,
       targetGx: null, targetGy: null, targetAttr: null,
-      timer: Math.random() * 1.6, walkPhase: Math.random() * 6, speechTimer: 0
+      timer: Math.random() * 1.4, walkPhase: Math.random() * 6, speechTimer: 0
     };
   }
 
@@ -1086,31 +1040,50 @@ class ParkScene extends Phaser.Scene {
     if (this.coasterTrack && this.coasterCars) {
       const len = this.coasterTrack.length - 1;
       this.coasterCars.forEach((car, idx) => {
-        const u = ((t * 0.18 - idx * 0.025) % 1 + 1) % 1;
+        const u = ((t * 0.20 - idx * 0.025) % 1 + 1) % 1;
         const p = this.coasterTrack[Math.floor(u * len)];
         car.setPosition(p.s.x, p.s.y - 4);
         car.setDepth(IsoMath.depth(p.gx, p.gy, 52));
       });
     }
 
-    // 2. Wonder Wheel: Rotate full spoked wheel + counter-rotate gondolas upright!
-    if (this.ferrisRotor) {
-      this.ferrisRotor.rotation = t * 0.36;
-      this.ferrisGondolas.forEach(pod => {
-        pod.rotation = -this.ferrisRotor.rotation;
-      });
+    // 2. Wonder Wheel: Perspective-Matched Tilted Elliptical Gondolas & Glowing Lights
+    if (this.ferrisPodsGfx && this.ferrisCenter) {
+      const g = this.ferrisPodsGfx;
+      g.clear();
+      const rx = 86, ry = 104, tilt = -0.32;
+      const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
+      const podCols = [0xef4444, 0xfacc15, 0x3b82f6, 0x10b981];
+
+      for (let i = 0; i < 12; i++) {
+        const a = t * 0.45 + (i * Math.PI * 2) / 12;
+        const lx = Math.cos(a) * rx;
+        const ly = Math.sin(a) * ry;
+        const gx = this.ferrisCenter.x + (lx * cosT - ly * sinT);
+        const gy = this.ferrisCenter.y + (lx * sinT + ly * cosT);
+
+        // Glowing rim bulb
+        g.fillStyle(0xfef08a, 0.9);
+        g.fillCircle(gx, gy - 6, 3);
+
+        // Hanging upright passenger gondola
+        g.fillStyle(podCols[i % 4], 1);
+        g.fillRoundedRect(gx - 8, gy - 2, 16, 12, 4);
+        g.lineStyle(1.5, 0x1e293b, 0.85);
+        g.strokeRoundedRect(gx - 8, gy - 2, 16, 12, 4);
+      }
     }
 
     // 3. Starlight Carousel: Oscillate & bob sliced horse ring + pulsing marquee bulbs
     if (this.carouselMid && this.carouselBasePos) {
-      this.carouselMid.x = this.carouselBasePos.x + Math.sin(t * 2.2) * 9;
-      this.carouselMid.y = this.carouselBasePos.y + Math.abs(Math.sin(t * 4.4)) * -4.5;
+      this.carouselMid.x = this.carouselBasePos.x + Math.sin(t * 2.4) * 10;
+      this.carouselMid.y = this.carouselBasePos.y + Math.abs(Math.sin(t * 4.8)) * -5;
     }
     if (this.carouselLights && this.carouselCenter) {
       const g = this.carouselLights;
       g.clear();
       for (let i = 0; i < 10; i++) {
-        const a = t * 1.8 + (i * Math.PI * 2) / 10;
+        const a = t * 2.0 + (i * Math.PI * 2) / 10;
         const lx = this.carouselCenter.x + Math.cos(a) * 68;
         const ly = this.carouselCenter.y - 26 + Math.sin(a) * 28;
         g.fillStyle(i % 2 === 0 ? 0xfef08a : 0xfda4af, 0.95);
@@ -1118,18 +1091,21 @@ class ParkScene extends Phaser.Scene {
       }
     }
 
-    // 4. Turbo Bumper Cars Arena
+    // 4. Open-Air Turbo Bumper Cars Arena (Cars clearly visible bumping!)
     if (this.bumperCarsGfx && this.bumperCenter) {
       const g = this.bumperCarsGfx;
       g.clear();
-      for (let i = 0; i < 5; i++) {
-        const bx = this.bumperCenter.gx + Math.sin(t * 1.7 + i * 1.6) * 1.5;
-        const by = this.bumperCenter.gy + Math.cos(t * 1.4 + i * 2.1) * 1.5;
+      for (let i = 0; i < 6; i++) {
+        const bx = this.bumperCenter.gx + Math.sin(t * 1.9 + i * 1.5) * 1.6;
+        const by = this.bumperCenter.gy + Math.cos(t * 1.6 + i * 2.1) * 1.6;
         const bp = IsoMath.toScreen(bx, by, 4);
-        g.fillStyle([0xef4444, 0x3b82f6, 0xfacc15, 0x10b981, 0xa855f7][i], 1);
-        g.fillEllipse(bp.x, bp.y, 16, 10);
-        g.lineStyle(1.5, 0x0f172a, 1);
-        g.strokeEllipse(bp.x, bp.y, 16, 10);
+        g.fillStyle([0xef4444, 0x3b82f6, 0xfacc15, 0x10b981, 0xa855f7, 0xf97316][i], 1);
+        g.fillEllipse(bp.x, bp.y, 18, 11);
+        g.lineStyle(1.8, 0x0f172a, 1);
+        g.strokeEllipse(bp.x, bp.y, 18, 11);
+        // Driver helmet dot
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(bp.x, bp.y - 3, 3.5);
       }
     }
 
@@ -1138,12 +1114,12 @@ class ParkScene extends Phaser.Scene {
       const g = this.trainGfx;
       g.clear();
       for (let c = 0; c < 4; c++) {
-        const a = t * 0.85 - c * 0.25;
+        const a = t * 0.95 - c * 0.25;
         const tp = IsoMath.toScreen(this.trainCenter.gx + Math.cos(a) * 3.4, this.trainCenter.gy + Math.sin(a) * 2.1, 4);
         g.fillStyle(c === 0 ? 0xdc2626 : [0xfacc15, 0x2563eb, 0x10b981][c % 3], 1);
-        g.fillRoundedRect(tp.x - 8, tp.y - 6, 16, 10, 3);
-        g.lineStyle(1.2, 0x1e293b, 1);
-        g.strokeRoundedRect(tp.x - 8, tp.y - 6, 16, 10, 3);
+        g.fillRoundedRect(tp.x - 9, tp.y - 7, 18, 11, 3);
+        g.lineStyle(1.4, 0x1e293b, 1);
+        g.strokeRoundedRect(tp.x - 9, tp.y - 7, 18, 11, 3);
       }
     }
 
@@ -1153,23 +1129,21 @@ class ParkScene extends Phaser.Scene {
       g.clear();
       const bx = this.slideBase.x, by = this.slideBase.y;
       for (let i = 0; i < 4; i++) {
-        const u = ((t * 0.9 + i * 0.25) % 1);
-        // Blue left spiral flow
+        const u = ((t * 1.05 + i * 0.25) % 1);
         const lx = bx - 35 + Math.sin(u * Math.PI * 3) * 32;
         const ly = by - 85 + u * 155;
-        g.fillStyle(0xe0f2fe, 0.85);
-        g.fillCircle(lx, ly, 4.5);
-        // Yellow right spiral flow
+        g.fillStyle(0xe0f2fe, 0.9);
+        g.fillCircle(lx, ly, 5);
+
         const rx = bx + 38 - Math.sin(u * Math.PI * 3) * 32;
         const ry = by - 80 + u * 155;
-        g.fillStyle(0xffffff, 0.85);
-        g.fillCircle(rx, ry, 4.5);
+        g.fillStyle(0xffffff, 0.9);
+        g.fillCircle(rx, ry, 5);
       }
-      // Landing pool splash rings
-      const pulse = (t * 2.2) % 1;
+      const pulse = (t * 2.4) % 1;
       g.lineStyle(2.5, 0xffffff, 1 - pulse);
-      g.strokeEllipse(bx - 16, by + 95, 14 + pulse * 36, 7 + pulse * 18);
-      g.strokeEllipse(bx + 18, by + 102, 14 + ((pulse + 0.5) % 1) * 36, 7 + ((pulse + 0.5) % 1) * 18);
+      g.strokeEllipse(bx - 16, by + 95, 14 + pulse * 38, 7 + pulse * 19);
+      g.strokeEllipse(bx + 18, by + 102, 14 + ((pulse + 0.5) % 1) * 38, 7 + ((pulse + 0.5) % 1) * 19);
     }
 
     // 7. Waterfall Lagoon Pool: Scrolling waterfall streaks, wave rings & bobbing swim tubes
@@ -1177,33 +1151,30 @@ class ParkScene extends Phaser.Scene {
       const g = this.lagoonAnimGfx;
       g.clear();
       const lx = this.lagoonCenter.x, ly = this.lagoonCenter.y;
-      // Expanding water ripples
       for (let i = 0; i < 4; i++) {
-        const p = ((t * 0.7 + i * 0.25) % 1);
-        g.lineStyle(2, 0xffffff, (1 - p) * 0.7);
-        g.strokeEllipse(lx - 14 + i * 8, ly + 10 + (i % 2) * 12, 16 + p * 44, 8 + p * 22);
+        const p = ((t * 0.8 + i * 0.25) % 1);
+        g.lineStyle(2, 0xffffff, (1 - p) * 0.75);
+        g.strokeEllipse(lx - 14 + i * 8, ly + 10 + (i % 2) * 12, 16 + p * 46, 8 + p * 23);
       }
-      // Cascading waterfall foam streaks
-      g.fillStyle(0xffffff, 0.85);
+      g.fillStyle(0xffffff, 0.9);
       for (let m = 0; m < 8; m++) {
-        const wy = ((t * 42 + m * 11) % 44);
-        g.fillRoundedRect(lx + 46 + (m % 4) * 7, ly - 68 + wy, 3.5, 10, 2);
+        const wy = ((t * 46 + m * 11) % 44);
+        g.fillRoundedRect(lx + 46 + (m % 4) * 7, ly - 68 + wy, 3.5, 11, 2);
       }
-      // Bobbing colorful swim rings
       g.lineStyle(4, 0xf43f5e, 1);
-      g.strokeEllipse(lx - 26 + Math.sin(t * 1.5) * 6, ly + 14 + Math.cos(t * 1.8) * 4, 16, 9);
+      g.strokeEllipse(lx - 26 + Math.sin(t * 1.7) * 7, ly + 14 + Math.cos(t * 1.9) * 4, 16, 9);
       g.lineStyle(4, 0xfacc15, 1);
-      g.strokeEllipse(lx + 12 + Math.cos(t * 1.3) * 6, ly + 26 + Math.sin(t * 1.6) * 4, 16, 9);
+      g.strokeEllipse(lx + 12 + Math.cos(t * 1.5) * 7, ly + 26 + Math.sin(t * 1.7) * 4, 16, 9);
     }
 
     // 8. Central Fountain Water Jets
     if (this.fountainJets && this.fountainCenter) {
       const g = this.fountainJets;
       g.clear();
-      const h = 14 + Math.sin(t * 5) * 5;
-      g.fillStyle(0xe0f2fe, 0.9);
+      const h = 15 + Math.sin(t * 5.5) * 5;
+      g.fillStyle(0xe0f2fe, 0.95);
       g.fillEllipse(this.fountainCenter.x, this.fountainCenter.y - h, 14, 8);
-      g.lineStyle(2.5, 0xffffff, 0.85);
+      g.lineStyle(2.5, 0xffffff, 0.9);
       g.lineBetween(this.fountainCenter.x, this.fountainCenter.y - 2, this.fountainCenter.x, this.fountainCenter.y - h);
     }
 
@@ -1214,7 +1185,7 @@ class ParkScene extends Phaser.Scene {
       const cols = [0x38bdf8, 0xf43f5e, 0xfacc15, 0x34d399];
       for (let i = 0; i < 5; i++) {
         const pulse = 0.5 + 0.5 * Math.sin(t * 6 + i * 1.3);
-        g.fillStyle(cols[(i + Math.floor(t * 2)) % 4], pulse * 0.75);
+        g.fillStyle(cols[(i + Math.floor(t * 2)) % 4], pulse * 0.8);
         g.fillCircle(this.indoorCenter.x - 135 + i * 24, this.indoorCenter.y - 12 - i * 11, 6);
       }
     }
@@ -1222,25 +1193,25 @@ class ParkScene extends Phaser.Scene {
     // 10. Fluttering Castle Entrance Flags
     this.flags.forEach(f => {
       f.g.clear();
-      const wave = Math.sin(t * 6 + f.phase) * 3;
+      const wave = Math.sin(t * 6.5 + f.phase) * 3.5;
       f.g.fillStyle(f.col, 1);
-      f.g.fillTriangle(f.x, f.y, f.x + 18, f.y + 4 + wave, f.x, f.y + 10);
+      f.g.fillTriangle(f.x, f.y, f.x + 19, f.y + 4 + wave, f.x, f.y + 10);
     });
 
     // 11. Drifting Hot Air Balloons
     this.balloons.forEach(b => {
-      b.c.x = b.baseX + Math.sin(t * 0.22 + b.phase) * 95;
-      b.c.y = b.baseY + Math.cos(t * 0.35 + b.phase) * 24;
+      b.c.x = b.baseX + Math.sin(t * 0.25 + b.phase) * 105;
+      b.c.y = b.baseY + Math.cos(t * 0.38 + b.phase) * 26;
     });
 
     // 12. Bistro Chimney Smoke
-    if (dt > 0 && this.bistroChimney && Math.random() < dt * 2.8) {
-      const puff = this.add.circle(this.bistroChimney.x, this.bistroChimney.y, 4.5, 0xffffff, 0.7)
+    if (dt > 0 && this.bistroChimney && Math.random() < dt * 3.0) {
+      const puff = this.add.circle(this.bistroChimney.x, this.bistroChimney.y, 4.5, 0xffffff, 0.72)
         .setDepth(IsoMath.depth(24, 11, 55));
       this.tweens.add({
         targets: puff,
-        x: puff.x + 20,
-        y: puff.y - 42,
+        x: puff.x + 22,
+        y: puff.y - 44,
         scale: 2.8,
         alpha: 0,
         duration: 2400,
@@ -1329,7 +1300,7 @@ class ParkScene extends Phaser.Scene {
         d.gx += (dx / dist) * Math.min(step, dist);
         d.gy += (dy / dist) * Math.min(step, dist);
         actor.walkPhase += dt * 11;
-        actor.body.y = -Math.abs(Math.sin(actor.walkPhase)) * 3.2;
+        actor.body.y = -Math.abs(Math.sin(actor.walkPhase)) * 3.4;
       }
       const sp = IsoMath.toScreen(d.gx, d.gy);
       actor.root.setPosition(sp.x, sp.y);
@@ -1445,7 +1416,7 @@ class ParkScene extends Phaser.Scene {
 
     this.input.on('wheel', (p, go, dx, dy) => {
       const cam = this.cameras.main;
-      cam.setZoom(Phaser.Math.Clamp(cam.zoom - dy * 0.0006, 0.38, 1.55));
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom - dy * 0.0006, 0.38, 1.65));
     });
   }
 
@@ -1506,7 +1477,7 @@ class ParkScene extends Phaser.Scene {
     const actor = this.actors.find(a => a.data.id === id);
     if (!actor) return;
     this.cameras.main.startFollow(actor.root, true, 0.08, 0.08);
-    this.cameras.main.zoomTo(1.08, 350);
+    this.cameras.main.zoomTo(1.18, 350);
     this.renderFamilyDock();
     this.updateInspector();
     this.showToast('Following ' + actor.data.name);
