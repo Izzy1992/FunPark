@@ -8,254 +8,1427 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#183044;--muted:#6b7e8e;--panel:rgba(255,255,255,.94);--line:#e2eaf0;--blue:#3279df;--mint:#4fc7a1;--gold:#ffcb62}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#b9d9cb;font-family:"DM Sans",sans-serif;color:var(--ink)}
-#game{position:fixed;inset:0}canvas{display:block}
-.panel{background:var(--panel);border:1px solid rgba(255,255,255,.8);box-shadow:0 12px 35px rgba(23,55,68,.14);backdrop-filter:blur(14px);border-radius:18px}
-.topbar{position:fixed;z-index:5;left:16px;right:16px;top:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;pointer-events:none}
+:root{
+  --ink:#173245; --muted:#5c7486; --panel:rgba(255,255,255,.94);
+  --blue:#2a74d8; --mint:#3bb996; --gold:#f5b841; --coral:#eb6a7a;
+}
+*{box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#7eb977;font-family:"DM Sans",sans-serif;color:var(--ink)}
+#game{position:fixed;inset:0;width:100%;height:100%}
+canvas{display:block}
+
+.panel{
+  background:var(--panel);border:1px solid rgba(255,255,255,.88);
+  box-shadow:0 12px 32px rgba(20,52,68,.18);backdrop-filter:blur(12px);border-radius:16px;
+}
+.topbar{
+  position:fixed;z-index:10;left:14px;right:14px;top:12px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none;
+}
 .topbar>*{pointer-events:auto}
-.brand{padding:10px 15px;display:flex;align-items:center;gap:10px}
-.brandmark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#6ed6b3,#2e9f9b);display:grid;place-items:center;color:white;font-size:21px}
-.brand strong{font:600 17px Fredoka,sans-serif;display:block}.brand small{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
-.clock{padding:9px 14px;display:flex;align-items:center;gap:12px}.sun{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#fff2c8;font-size:21px}
-.clock strong{font:600 21px Fredoka,sans-serif;display:block}.clock small{color:var(--muted);font-weight:700;font-size:11px}
-.controls{display:flex;gap:6px;padding:7px}.btn{border:0;background:#f1f6f8;color:var(--ink);border-radius:11px;padding:9px 12px;font:700 12px "DM Sans";cursor:pointer;transition:.15s}
-.btn:hover{background:#e4eef3;transform:translateY(-1px)}.btn.active{background:#dff7ed;color:#167e67}.btn.primary{background:#286fce;color:white}
-.zonebar{position:fixed;z-index:5;top:82px;left:16px;display:flex;gap:7px;flex-wrap:wrap}
-.zonebtn{padding:9px 13px;border-radius:12px;font-size:12px;font-weight:800;box-shadow:0 5px 16px #254c3920}
-.zonebtn.active{background:#183e50;color:white}
-.rightstack{position:fixed;right:16px;top:84px;z-index:5;width:208px;display:flex;flex-direction:column;gap:9px}
-.info{padding:13px 14px}.eyebrow{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8194a1;font-weight:800}
-.info h3{margin:4px 0 3px;font:600 17px Fredoka}.info p{margin:0;color:var(--muted);font-size:11px;line-height:1.45}
-.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
-.stat{background:#f3f7f8;border-radius:10px;padding:8px}.stat b{font:600 17px Fredoka;display:block}.stat span{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
-.inspector{display:none;padding:12px 13px}.inspector.show{display:block}
-.personhead{display:flex;align-items:center;gap:9px}.avatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:#e3f2ee;font-size:23px}
-.personhead b{font:600 16px Fredoka;display:block}.personhead small{font-size:10px;color:var(--muted);font-weight:700}
-.need{margin-top:9px}.needrow{display:flex;justify-content:space-between;font-size:10px;font-weight:800;margin-bottom:4px}
-.track{height:6px;border-radius:10px;background:#e8eef1;overflow:hidden}.fill{height:100%;border-radius:10px;width:80%}
-.action{font-size:10px;color:#527080;margin-top:9px;line-height:1.4}
-.familydock{position:fixed;z-index:5;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:9px 11px;max-width:calc(100vw - 24px)}
-.familycard{width:83px;border:1px solid transparent;background:#f7fafb;border-radius:13px;padding:7px 5px;cursor:pointer;text-align:center;transition:.15s}
-.familycard:hover{transform:translateY(-3px)}.familycard.selected{background:#e5f4ff;border-color:#83b7e9}
-.face{width:38px;height:38px;border-radius:50%;margin:0 auto 4px;display:grid;place-items:center;font-size:21px;border:2px solid white;box-shadow:0 2px 7px #1b405022}
-.familycard b{font:600 12px Fredoka;display:block}.familycard small{font-size:9px;color:var(--muted);font-weight:700}
-.hint{position:fixed;z-index:4;left:18px;bottom:18px;color:#244c4b;font-size:10px;font-weight:800;text-shadow:0 1px 3px #ffffffb0}
-.toast{position:fixed;z-index:9;left:50%;top:150px;transform:translate(-50%,-8px);opacity:0;transition:.25s;background:#163d4d;color:white;padding:10px 15px;border-radius:12px;font-size:12px;font-weight:800;pointer-events:none}
+.brand{padding:9px 14px;display:flex;align-items:center;gap:10px}
+.brandmark{
+  width:36px;height:36px;border-radius:11px;
+  background:linear-gradient(135deg,#4fd1a5,#278ea5);
+  display:grid;place-items:center;color:#fff;font:700 18px Fredoka,sans-serif;
+  box-shadow:0 4px 10px rgba(39,142,165,.3);
+}
+.brand strong{font:700 16px Fredoka,sans-serif;display:block;line-height:1.1}
+.brand small{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+
+.clock{padding:8px 14px;display:flex;align-items:center;gap:11px}
+.skybadge{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(145deg,#ffe999,#ffbe44);transition:.4s;
+}
+.skybadge.night{background:linear-gradient(145deg,#2b3d63,#18233c)}
+.clock strong{font:700 19px Fredoka,sans-serif;display:block;line-height:1.1}
+.clock small{color:var(--muted);font-weight:700;font-size:10px;letter-spacing:.04em}
+
+.controls{display:flex;gap:5px;padding:6px;align-items:center}
+.btn{
+  border:0;background:#eef4f8;color:var(--ink);border-radius:10px;
+  padding:8px 11px;font:700 12px "DM Sans",sans-serif;cursor:pointer;transition:.15s;
+}
+.btn:hover{background:#dfeaf2;transform:translateY(-1px)}
+.btn.active{background:#d7f5ea;color:#147860;box-shadow:inset 0 0 0 1.5px #4fc7a1}
+.btn.icon{padding:8px 10px}
+
+.zonebar{position:fixed;z-index:10;top:74px;left:14px;display:flex;gap:6px;flex-wrap:wrap}
+.zonebtn{padding:8px 12px;border-radius:11px;font-size:12px;font-weight:800;box-shadow:0 4px 14px rgba(23,50,69,.14)}
+.zonebtn.active{background:#173b4f;color:#fff}
+
+.rightstack{
+  position:fixed;right:14px;top:74px;z-index:10;width:234px;
+  display:flex;flex-direction:column;gap:9px;max-height:calc(100vh - 175px);overflow-y:auto;
+}
+.info{padding:12px 14px}
+.eyebrow{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:#7a92a3;font-weight:800}
+.info h3{margin:3px 0;font:700 16px Fredoka,sans-serif}
+.info p{margin:0;color:var(--muted);font-size:11px;line-height:1.4}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.stat{background:#f2f7fa;border-radius:10px;padding:7px 9px}
+.stat b{font:700 16px Fredoka,sans-serif;display:block;color:var(--ink)}
+.stat span{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+
+.inspector{display:none;padding:12px 13px}
+.inspector.show{display:block}
+.personhead{display:flex;align-items:center;gap:10px}
+.avatar{
+  width:44px;height:44px;border-radius:13px;overflow:hidden;
+  background:#e6f3f8;border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.1);flex-shrink:0;
+}
+.avatar canvas{width:100%;height:100%}
+.personhead b{font:700 15px Fredoka,sans-serif;display:block}
+.personhead small{font-size:10px;color:var(--muted);font-weight:700}
+
+.need{margin-top:7px}
+.needrow{display:flex;justify-content:space-between;font-size:10px;font-weight:800;margin-bottom:3px}
+.track{height:6px;border-radius:10px;background:#e5edf2;overflow:hidden}
+.fill{height:100%;border-radius:10px;transition:width .25s}
+.actionbox{
+  margin-top:9px;padding:7px 9px;border-radius:9px;background:#f3f8fb;
+  font-size:11px;font-weight:600;color:#335366;line-height:1.35;
+}
+.goalchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.chip{
+  border:0;background:#e8f2fa;color:#235b8c;border-radius:7px;padding:4px 7px;
+  font:700 10px "DM Sans",sans-serif;cursor:pointer;
+}
+.chip:hover{background:#d4e7f7}
+
+.familydock{
+  position:fixed;z-index:10;left:50%;bottom:12px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;padding:8px 10px;max-width:calc(100vw - 20px);
+}
+.familycard{
+  width:94px;border:1.5px solid transparent;background:#f5f9fb;border-radius:13px;
+  padding:6px 5px;cursor:pointer;text-align:center;transition:.15s;
+}
+.familycard:hover{transform:translateY(-2px);background:#edf5fa}
+.familycard.selected{background:#e3f2ff;border-color:#539be0}
+.face{
+  width:40px;height:40px;border-radius:50%;margin:0 auto 4px;overflow:hidden;
+  border:2px solid #fff;box-shadow:0 2px 7px rgba(23,50,69,.16);
+}
+.face canvas{width:100%;height:100%}
+.familycard b{font:700 12px Fredoka,sans-serif;display:block}
+.familycard small{
+  font-size:9px;color:var(--muted);font-weight:700;display:block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.minibars{display:flex;gap:3px;margin-top:4px;padding:0 4px}
+.minibars span{flex:1;height:3px;border-radius:3px;background:#dce6ec;overflow:hidden}
+.minibars i{display:block;height:100%}
+
+.toast{
+  position:fixed;z-index:20;left:50%;top:128px;transform:translate(-50%,-8px);
+  opacity:0;transition:.25s;background:#163c4f;color:#fff;padding:8px 14px;
+  border-radius:11px;font-size:12px;font-weight:700;pointer-events:none;
+  box-shadow:0 8px 20px rgba(0,0,0,.2);
+}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:760px){.brand{padding:8px}.brand strong{font-size:14px}.brand small{display:none}.clock{padding:7px 9px;gap:7px}.clock strong{font-size:16px}.sun{width:30px;height:30px}.rightstack{top:132px;width:164px;right:9px}.info{padding:10px}.info p{font-size:10px}.topbar{left:8px;right:8px;top:8px}.zonebar{top:69px;left:8px;right:8px;gap:5px}.zonebtn{padding:7px 9px;font-size:10px}.familydock{bottom:8px;gap:3px;padding:6px}.familycard{width:67px;padding:5px 3px}.face{width:31px;height:31px}.familycard b{font-size:11px}.familycard small{font-size:8px}.hint{display:none}.controls{padding:5px}.btn{padding:8px 9px;font-size:10px}}
+
+@media(max-width:820px){
+  .rightstack{width:185px;top:114px}
+  .zonebar{top:66px}
+  .familycard{width:76px}
+}
 </style>
 </head>
 <body>
 <div id="game"></div>
+
 <div class="topbar">
-  <div class="panel brand"><div class="brandmark">✦</div><div><strong>Wonderland Adventures</strong><small>Family park simulator</small></div></div>
-  <div class="panel clock"><div class="sun" id="weatherIcon">☀️</div><div><strong id="clock">10:15 AM</strong><small id="day">DAY 1 · TUESDAY</small></div></div>
+  <div class="panel brand">
+    <div class="brandmark">W</div>
+    <div><strong>Wonderland Adventures</strong><small>Isometric Resort Simulator</small></div>
+  </div>
+  <div class="panel clock">
+    <div class="skybadge" id="skyBadge">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="5" fill="#fff"/>
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div><strong id="clock">09:30 AM</strong><small id="day">DAY 1 · SATURDAY · SUNNY</small></div>
+  </div>
   <div class="panel controls">
-    <button class="btn" id="pause">Ⅱ</button><button class="btn active" data-speed="1">1×</button><button class="btn" data-speed="2">2×</button><button class="btn" data-speed="4">4×</button>
-    <button class="btn" id="overview" title="Overview">⌖</button>
+    <button class="btn" id="pauseBtn" title="Pause / Resume">II</button>
+    <button class="btn active" data-speed="1">1x</button>
+    <button class="btn" data-speed="2">2x</button>
+    <button class="btn" data-speed="4">4x</button>
+    <button class="btn icon" id="audioBtn" title="Toggle Audio">SFX Off</button>
+    <button class="btn icon" id="overviewBtn" title="Full Park View">Overview</button>
   </div>
 </div>
+
 <div class="zonebar">
-  <button class="btn zonebtn active" data-zone="all">✦ Entire Park</button>
-  <button class="btn zonebtn" data-zone="theme">🎢 Theme Park</button>
-  <button class="btn zonebtn" data-zone="water">💦 Water Park</button>
-  <button class="btn zonebtn" data-zone="indoor">🎮 Indoor Park</button>
+  <button class="btn zonebtn active" data-zone="all">Entire Park</button>
+  <button class="btn zonebtn" data-zone="theme">Theme Park</button>
+  <button class="btn zonebtn" data-zone="water">Water Park</button>
+  <button class="btn zonebtn" data-zone="indoor">Indoor Park</button>
 </div>
+
 <div class="rightstack">
   <div class="panel info">
-    <div class="eyebrow">Park overview</div><h3 id="zoneTitle">Wonderland Park</h3><p id="zoneDesc">A whole day of family fun. Watch the park come alive.</p>
-    <div class="statgrid"><div class="stat"><b id="guestCount">18</b><span>Park guests</span></div><div class="stat"><b id="rideCount">8</b><span>Attractions</span></div></div>
+    <div class="eyebrow">Park Operations</div>
+    <h3 id="zoneTitle">Wonderland Resort</h3>
+    <p id="zoneDesc">Three connected worlds of rides, water slides, and indoor fun.</p>
+    <div class="statgrid">
+      <div class="stat"><b id="guestCount">30</b><span>Total Guests</span></div>
+      <div class="stat"><b id="rideCount">12</b><span>Attractions</span></div>
+      <div class="stat"><b id="ridesDone">0</b><span>Rides Enjoyed</span></div>
+      <div class="stat"><b id="parkMood">94%</b><span>Family Mood</span></div>
+    </div>
   </div>
+
   <div class="panel inspector" id="inspector">
-    <div class="personhead"><div class="avatar" id="insAvatar">👨🏻</div><div><b id="insName">Izmi</b><small id="insRole">Dad · Age 34</small></div></div>
-    <div class="need"><div class="needrow"><span>⚡ Energy</span><span id="energyVal">90%</span></div><div class="track"><div class="fill" id="energyBar" style="background:#4fc7a1"></div></div></div>
-    <div class="need"><div class="needrow"><span>😊 Happiness</span><span id="funVal">85%</span></div><div class="track"><div class="fill" id="funBar" style="background:#ffbd59"></div></div></div>
-    <div class="need"><div class="needrow"><span>🍔 Hunger</span><span id="hungerVal">80%</span></div><div class="track"><div class="fill" id="hungerBar" style="background:#f18ca7"></div></div></div>
-    <div class="action" id="insAction">Exploring the park with the family.</div>
+    <div class="personhead">
+      <div class="avatar" id="insAvatar"></div>
+      <div><b id="insName">Izmi</b><small id="insRole">Father · Age 34</small></div>
+    </div>
+    <div class="need"><div class="needrow"><span>Energy</span><span id="energyVal">90%</span></div><div class="track"><div class="fill" id="energyBar" style="background:#3bb996"></div></div></div>
+    <div class="need"><div class="needrow"><span>Happiness</span><span id="funVal">85%</span></div><div class="track"><div class="fill" id="funBar" style="background:#f5b841"></div></div></div>
+    <div class="need"><div class="needrow"><span>Hunger</span><span id="hungerVal">80%</span></div><div class="track"><div class="fill" id="hungerBar" style="background:#eb6a7a"></div></div></div>
+    <div class="need"><div class="needrow"><span>Thirst</span><span id="thirstVal">82%</span></div><div class="track"><div class="fill" id="thirstBar" style="background:#3898ec"></div></div></div>
+    <div class="actionbox" id="insAction">Exploring the main plaza.</div>
+    <div class="goalchips" id="goalChips"></div>
   </div>
 </div>
-<div class="hint">DRAG TO EXPLORE · SCROLL TO ZOOM · SELECT A FAMILY MEMBER TO FOLLOW</div>
+
 <div class="panel familydock" id="familyDock"></div>
 <div class="toast" id="toast"></div>
+
 <script>
 (() => {
 'use strict';
-const W=2400,H=1600, DAY=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const sim={minutes:615,day:2,speed:1,paused:false,selected:null,zone:'all',toastTimer:0,rides:0};
-const family=[
- {id:'izmi',name:'Izmi',role:'Dad',age:34,skin:0xc88c66,shirt:0x267f78,pants:0x344d62,hair:0x29252b,scale:1.08,x:1050,y:780,energy:91,fun:82,hunger:77,action:'Looking around the park',goal:'walk',color:'#dff3ee',personality:'adventurous',speech:'Which ride first?'},
- {id:'anis',name:'Anis',role:'Mom',age:31,skin:0xd59b75,shirt:0xe9789a,pants:0x8c5268,hair:0x563b38,hijab:0xf2a9bf,scale:1.0,x:1090,y:790,energy:88,fun:84,hunger:80,action:'Enjoying the day together',goal:'walk',color:'#fbe4ec',personality:'relaxed',speech:'This place is lovely!'},
- {id:'isaac',name:'Isaac',role:'Son',age:5,skin:0xc98b65,shirt:0x438fe1,pants:0xf2bd45,hair:0x29252b,scale:.76,x:1125,y:800,energy:98,fun:94,hunger:74,action:'Searching for exciting rides',goal:'walk',color:'#e2f0ff',personality:'curious',speech:'Can we go on that?'},
- {id:'hayyan',name:'Hayyan',role:'Son',age:4,skin:0xce916b,shirt:0xe85c58,pants:0x46b78d,hair:0x29252b,scale:.71,x:1160,y:810,energy:100,fun:96,hunger:79,action:'Ready for an adventure',goal:'walk',color:'#fff0d7',personality:'energetic',speech:'Wheeeee!'}
-];
-const zones={
- theme:{x:1650,y:420,zoom:.83,title:'Adventure Kingdom',desc:'Big thrills, spinning rides and magical midway fun.'},
- water:{x:720,y:1080,zoom:.95,title:'Splash Bay Water Park',desc:'Cool pools, twisting slides and a lazy river.'},
- indoor:{x:1780,y:1110,zoom:.92,title:'WonderDome Indoor Park',desc:'Arcades, soft play, trampolines and indoor adventures.'},
- all:{x:1200,y:800,zoom:.57,title:'Wonderland Park',desc:'A whole day of family fun. Watch the park come alive.'}
+
+/* ============================================================================
+   1. ISOMETRIC COORDINATE & DEPTH SYSTEM
+   ============================================================================ */
+const IsoMath = {
+  TILE_W: 64,
+  TILE_H: 32,
+  toScreen(gx, gy, gz = 0) {
+    return {
+      x: (gx - gy) * (this.TILE_W * 0.5),
+      y: (gx + gy) * (this.TILE_H * 0.5) - gz
+    };
+  },
+  depth(gx, gy, layer = 10) {
+    return (gx + gy) * 100 + layer;
+  }
 };
-const attractions=[
- {id:'coaster',name:'Sky Dragon Coaster',x:1640,y:390,type:'coaster',zone:'theme'},
- {id:'ferris',name:'Wonder Wheel',x:1940,y:510,type:'ferris',zone:'theme'},
- {id:'carousel',name:'Starlight Carousel',x:1450,y:650,type:'carousel',zone:'theme'},
- {id:'bumper',name:'Bumper Cars',x:1850,y:750,type:'bumper',zone:'theme'},
- {id:'slides',name:'Tidal Twister Slides',x:650,y:1000,type:'slides',zone:'water'},
- {id:'pool',name:'Lagoon Pool',x:900,y:1160,type:'pool',zone:'water'},
- {id:'lazy',name:'Lazy River',x:430,y:1230,type:'lazy',zone:'water'},
- {id:'arcade',name:'Pixel Arcade',x:1770,y:1110,type:'arcade',zone:'indoor'},
- {id:'softplay',name:'Cloud Nine Soft Play',x:2040,y:1230,type:'softplay',zone:'indoor'},
- {id:'trampoline',name:'Bounce Arena',x:1510,y:1280,type:'trampoline',zone:'indoor'}
+
+/* ============================================================================
+   2. FLOOD-FILL WHITE BACKGROUND CLEANER FOR UPLOADED PNG ASSETS
+   Removes only outer white background connected to borders so interior whites
+   (carousel lights, foam, umbrellas, stone highlights) stay crisp!
+   ============================================================================ */
+const SpriteCleaner = {
+  cleanTexture(scene, rawKey, cleanKey) {
+    if (!scene.textures.exists(rawKey)) return false;
+    const src = scene.textures.get(rawKey).getSourceImage();
+    if (!src || !src.width) return false;
+
+    const w = src.width;
+    const h = src.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(src, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const visited = new Uint8Array(w * h);
+    const stack = new Int32Array(w * h);
+    let sp = 0;
+
+    const isWhiteBg = (idx) => {
+      const p = idx * 4;
+      const r = data[p], g = data[p + 1], b = data[p + 2];
+      return r > 236 && g > 236 && b > 236;
+    };
+
+    const pushIfBg = (x, y) => {
+      if (x < 0 || x >= w || y < 0 || y >= h) return;
+      const idx = y * w + x;
+      if (!visited[idx] && isWhiteBg(idx)) {
+        visited[idx] = 1;
+        stack[sp++] = idx;
+      }
+    };
+
+    // Seed flood fill from all 4 image edges
+    for (let x = 0; x < w; x++) { pushIfBg(x, 0); pushIfBg(x, h - 1); }
+    for (let y = 0; y < h; y++) { pushIfBg(0, y); pushIfBg(w - 1, y); }
+
+    while (sp > 0) {
+      const idx = stack[--sp];
+      const p = idx * 4;
+      data[p + 3] = 0;
+      const x = idx % w;
+      const y = (idx / w) | 0;
+      pushIfBg(x + 1, y);
+      pushIfBg(x - 1, y);
+      pushIfBg(x, y + 1);
+      pushIfBg(x, y - 1);
+    }
+
+    // Soft anti-alias edge feathering on pixels adjacent to removed background
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const idx = y * w + x;
+        if (visited[idx]) continue;
+        if (visited[idx - 1] || visited[idx + 1] || visited[idx - w] || visited[idx + w]) {
+          const p = idx * 4;
+          const lum = (data[p] + data[p + 1] + data[p + 2]) / 3;
+          if (lum > 215) {
+            data[p + 3] = Math.max(0, Math.min(255, (250 - lum) * 7));
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    scene.textures.addCanvas(cleanKey, canvas);
+    return true;
+  }
+};
+
+/* ============================================================================
+   3. ILLUSTRATED PORTRAIT STUDIO (NO EMOJIS)
+   ============================================================================ */
+const PortraitStudio = {
+  cache: {},
+  renderPortrait(char, size = 84) {
+    if (this.cache[char.id]) return this.cache[char.id];
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d');
+    ctx.scale(size / 84, size / 84);
+
+    const bg = ctx.createLinearGradient(0, 0, 84, 84);
+    bg.addColorStop(0, char.bgA);
+    bg.addColorStop(1, char.bgB);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 84, 84);
+
+    ctx.fillStyle = char.shirtHex;
+    ctx.beginPath();
+    ctx.roundRect(16, 56, 52, 34, 18);
+    ctx.fill();
+    ctx.strokeStyle = '#1d3547';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+
+    ctx.fillStyle = char.skinHex;
+    ctx.fillRect(35, 45, 14, 14);
+
+    if (char.hijabHex) {
+      ctx.fillStyle = char.hijabHex;
+      ctx.beginPath();
+      ctx.ellipse(42, 41, 24, 27, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#1d3547';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = char.skinHex;
+    ctx.beginPath();
+    ctx.ellipse(42, 34, 17, 19, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#1d3547';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(235, 106, 122, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(31, 38, 4.5, 2.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(53, 38, 4.5, 2.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (char.hijabHex) {
+      ctx.strokeStyle = '#1d3547';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(42, 35, 17.5, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = char.hairHex;
+      ctx.beginPath();
+      ctx.moveTo(24, 31);
+      ctx.quadraticCurveTo(25, 12, 42, 12);
+      ctx.quadraticCurveTo(59, 12, 60, 31);
+      ctx.quadraticCurveTo(52, 22, 42, 23);
+      ctx.quadraticCurveTo(32, 22, 24, 31);
+      ctx.fill();
+      ctx.strokeStyle = '#1d3547';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    if (char.id === 'izmi') {
+      ctx.strokeStyle = '#2d262b';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(42, 37, 13, 0.25 * Math.PI, 0.75 * Math.PI);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#182c3a';
+    ctx.beginPath();
+    ctx.arc(35.5, 33, 2.4, 0, Math.PI * 2);
+    ctx.arc(48.5, 33, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(36.3, 32.1, 0.9, 0, Math.PI * 2);
+    ctx.arc(49.3, 32.1, 0.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#8b3e46';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(42, 38.5, 5.5, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.stroke();
+
+    this.cache[char.id] = c;
+    return c;
+  }
+};
+
+/* ============================================================================
+   4. WEB AUDIO SYNTHESIZER
+   ============================================================================ */
+const AudioEngine = {
+  ctx: null,
+  enabled: false,
+  toggle() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) this.ctx = new AC();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    this.enabled = !this.enabled;
+    return this.enabled;
+  },
+  playTone(freq = 523.25, dur = 0.18, type = 'sine', vol = 0.04) {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.25, now + dur);
+    gain.gain.setValueAtTime(vol, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+  }
+};
+
+/* ============================================================================
+   5. SIMULATION DATA, FAMILY & ATTRACTIONS
+   ============================================================================ */
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const WEATHERS = ['SUNNY', 'BREEZY', 'GOLDEN'];
+
+const SimState = {
+  minutes: 570, // 09:30 AM
+  day: 1,
+  speed: 1,
+  paused: false,
+  selectedId: null,
+  zone: 'all',
+  ridesCompleted: 0,
+  weatherIndex: 0
+};
+
+const FamilyData = [
+  {
+    id: 'izmi', name: 'Izmi', role: 'Father', age: 34,
+    skin: 0xd1946e, skinHex: '#d1946e', shirt: 0x227c76, shirtHex: '#227c76',
+    pants: 0x2e4559, hair: 0x262226, hairHex: '#262226', scale: 1.06,
+    bgA: '#cdeee6', bgB: '#8fd3c2',
+    gx: 23.5, gy: 33.5, speed: 2.35,
+    energy: 94, happiness: 86, hunger: 82, thirst: 85,
+    action: 'Arriving at the Grand Entrance', state: 'idle',
+    prefs: ['coaster', 'ferris', 'bistro', 'arcade', 'pool'],
+    lines: ['Ready for the Sky Dragon?', 'Let us take a family photo!', 'What an awesome park!']
+  },
+  {
+    id: 'anis', name: 'Anis', role: 'Mother', age: 31,
+    skin: 0xdca480, skinHex: '#dca480', shirt: 0xe66f92, shirtHex: '#e66f92',
+    pants: 0x6e4459, hijab: 0xf4aec4, hijabHex: '#f4aec4', scale: 1.0,
+    bgA: '#fce2eb', bgB: '#f4b5ca',
+    gx: 24.3, gy: 33.2, speed: 2.25,
+    energy: 91, happiness: 88, hunger: 84, thirst: 86,
+    action: 'Admiring the castle entrance', state: 'idle',
+    prefs: ['pool', 'carousel', 'ferris', 'bistro', 'slides'],
+    lines: ['The lagoon waterfall is gorgeous!', 'Stay together boys, have fun!', 'Let us relax at the bistro soon.']
+  },
+  {
+    id: 'isaac', name: 'Isaac', age: 5, role: 'Son',
+    skin: 0xd49772, skinHex: '#d49772', shirt: 0x3588e0, shirtHex: '#3588e0',
+    pants: 0xf0b83e, hair: 0x262226, hairHex: '#262226', scale: 0.78,
+    bgA: '#dceeff', bgB: '#9ecbff',
+    gx: 23.2, gy: 34.4, speed: 2.6,
+    energy: 98, happiness: 95, hunger: 78, thirst: 80,
+    action: 'Spotting the spiral water slides', state: 'idle',
+    prefs: ['slides', 'coaster', 'arcade', 'carousel', 'pool'],
+    lines: ['Hayyan, race you to the slide!', 'Look how tall the Ferris wheel is!', 'Can we play arcade games next?']
+  },
+  {
+    id: 'hayyan', name: 'Hayyan', age: 4, role: 'Son',
+    skin: 0xd99d78, skinHex: '#d99d78', shirt: 0xeb5b56, shirtHex: '#eb5b56',
+    pants: 0x3db589, hair: 0x262226, hairHex: '#262226', scale: 0.72,
+    bgA: '#fff0d4', bgB: '#ffd089',
+    gx: 24.1, gy: 34.5, speed: 2.55,
+    energy: 100, happiness: 96, hunger: 80, thirst: 82,
+    action: 'Hopping excitedly on the plaza', state: 'idle',
+    prefs: ['slides', 'trampoline', 'softplay', 'carousel', 'pool'],
+    lines: ['Wheeeee! Splash time!', 'I want to jump on the trampolines!', 'Look at the big waterfall!']
+  }
 ];
-const config={type:Phaser.AUTO,parent:'game',backgroundColor:'#b9d9cb',scale:{mode:Phaser.Scale.RESIZE,width:'100%',height:'100%'},render:{antialias:true,pixelArt:false,roundPixels:false},scene:{preload,create,update}};
-let scene,world,actors=[],guestActors=[],rideGraphics=[],decor=[],timeText,lastUi=0,dragStart=null;
-const game=new Phaser.Game(config);
-function preload(){}
-function iso(x,y,z=0){return {x:(x-y)*.72,y:(x+y)*.36-z};}
-function create(){
- scene=this; this.cameras.main.setBounds(-220,-170,3700,2400); this.cameras.main.setZoom(.57);
- world=this.add.container(0,0);
- drawWorld(this);
- attractions.forEach(a=>drawAttraction(this,a));
- family.forEach((c,i)=>{const a=makeActor(this,c,false);actors.push(a);});
- for(let i=0;i<14;i++){const g={id:'guest'+i,x:650+(i%7)*180,y:580+Math.floor(i/7)*390,skin:[0xc78e68,0x9a684d,0xe0b18a][i%3],shirt:[0xefa85e,0x6a9fd1,0x8dc7a8,0xb18bd2][i%4],pants:0x46576a,scale:.68+Math.random()*.12,speed:30+Math.random()*18,target:null,goal:'wander',energy:90,fun:80,hunger:80};guestActors.push(makeActor(this,g,true));}
- createControls(this);
- this.input.on('pointerdown',p=>{if(p.y<160)return;dragStart={x:p.x,y:p.y,cx:this.cameras.main.scrollX,cy:this.cameras.main.scrollY,dragged:false};});
- this.input.on('pointermove',p=>{if(!dragStart||!p.isDown)return;const dx=p.x-(dragStart.x),dy=p.y-(dragStart.y);if(Math.hypot(dx,dy)>5)dragStart.dragged=true;if(dragStart.dragged){this.cameras.main.scrollX=dragStart.cx-dx;this.cameras.main.scrollY=dragStart.cy-dy;}});
- this.input.on('pointerup',p=>{if(dragStart&&!dragStart.dragged){const wp=this.cameras.main.getWorldPoint(p.x,p.y);const hit=[...actors].reverse().find(a=>Math.hypot(a.x-wp.x,a.y-wp.y)<35);if(hit)selectCharacter(hit.data.id);}dragStart=null;});
- this.input.on('wheel',(p,go,dx,dy)=>{const c=this.cameras.main;c.setZoom(Phaser.Math.Clamp(c.zoom-dy*.0007,.32,1.35));});
- setZone('all');renderDock();updateInspector();
+
+const ZonesConfig = {
+  all:    { gx: 22, gy: 22, zoom: 0.50, title: 'Wonderland Resort', desc: 'Three connected worlds of rides, water slides, and indoor fun.' },
+  theme:  { gx: 11, gy: 12, zoom: 0.80, title: 'Adventure Kingdom', desc: 'Sky Dragon Coaster, Wonder Wheel, Starlight Carousel & Bumper Cars.' },
+  water:  { gx: 11, gy: 32, zoom: 0.84, title: 'Splash Bay Water Park', desc: 'Spiral Tidal Slides, Waterfall Lagoon Pool & Tropical Sun Deck.' },
+  indoor: { gx: 33, gy: 26, zoom: 0.82, title: 'WonderDome Indoor Park', desc: 'Cutaway indoor hall with Pixel Arcade, Trampoline Court, Soft Play & Snack Bar.' }
+};
+
+const AttractionsData = [
+  // Outdoor Theme Park
+  { id: 'coaster',    name: 'Sky Dragon Coaster',   zone: 'theme',  gx: 8,  gy: 9,  queueGx: 11, queueGy: 13, type: 'coaster',    duration: 9,  thrill: 24, energyCost: 9 },
+  { id: 'ferris',     name: 'Wonder Wheel',         zone: 'theme',  gx: 17, gy: 7,  queueGx: 17, queueGy: 12, type: 'ferris',     duration: 10, thrill: 16, energyCost: 4 },
+  { id: 'carousel',   name: 'Starlight Carousel',   zone: 'theme',  gx: 14, gy: 16, queueGx: 16, queueGy: 19, type: 'carousel',   duration: 8,  thrill: 15, energyCost: 4 },
+  { id: 'bumper',     name: 'Turbo Bumper Cars',    zone: 'theme',  gx: 6,  gy: 17, queueGx: 9,  queueGy: 18, type: 'bumper',     duration: 8,  thrill: 18, energyCost: 6 },
+
+  // Water Park
+  { id: 'slides',     name: 'Spiral Tidal Slides',  zone: 'water',  gx: 7,  gy: 28, queueGx: 11, queueGy: 30, type: 'slides',     duration: 8,  thrill: 22, energyCost: 8 },
+  { id: 'pool',       name: 'Waterfall Lagoon Pool',zone: 'water',  gx: 14, gy: 35, queueGx: 16, queueGy: 31, type: 'pool',       duration: 12, thrill: 18, energyCost: 5 },
+
+  // Indoor Cutaway Hall (4 distinct interactive activity stations inside indoor_hall.png!)
+  { id: 'arcade',     name: 'Pixel Arcade Machines',zone: 'indoor', gx: 30, gy: 24, queueGx: 31, queueGy: 26, type: 'indoor_act', duration: 9,  thrill: 18, energyCost: 4 },
+  { id: 'trampoline', name: 'SkyBounce Trampolines',zone: 'indoor', gx: 34, gy: 22, queueGx: 33, queueGy: 25, type: 'indoor_act', duration: 8,  thrill: 22, energyCost: 9 },
+  { id: 'softplay',   name: 'Cloud Nine Soft Play', zone: 'indoor', gx: 37, gy: 25, queueGx: 35, queueGy: 27, type: 'indoor_act', duration: 10, thrill: 20, energyCost: 6 },
+  { id: 'snackbar',   name: 'WonderDome Snack Bar', zone: 'indoor', gx: 35, gy: 29, queueGx: 33, queueGy: 29, type: 'food',       duration: 7,  thrill: 12, energyCost: -16 },
+
+  // Dining & Landmarks
+  { id: 'bistro',     name: 'Garden Bistro Cafe',   zone: 'plaza',  gx: 28, gy: 13, queueGx: 26, queueGy: 16, type: 'food',       duration: 8,  thrill: 14, energyCost: -22 },
+  { id: 'plaza_fount',name: 'Crystal Plaza Fountain',zone:'plaza',  gx: 22, gy: 22, queueGx: 21, queueGy: 23, type: 'rest',       duration: 6,  thrill: 10, energyCost: -10 }
+];
+
+/* ============================================================================
+   6. MAIN PHASER 3 SCENE
+   ============================================================================ */
+class ParkScene extends Phaser.Scene {
+  constructor() {
+    super('ParkScene');
+    this.actors = [];
+    this.lampGlows = [];
+    this.dragState = null;
+    this.lastUiSync = 0;
+    this.animClock = 0;
+  }
+
+  preload() {
+    // Load all 8 uploaded PNG sprites from your GitHub assets/ folder
+    const assets = [
+      'grand_entrance',
+      'ferris_wheel',
+      'carousel',
+      'coaster_station',
+      'water_slides',
+      'lagoon_pool',
+      'indoor_hall',
+      'garden_bistro'
+    ];
+    assets.forEach(key => {
+      this.load.image(key + '_raw', `assets/${key}.png`);
+    });
+  }
+
+  create() {
+    // Strip outer white backgrounds automatically while preserving interior whites
+    const keys = [
+      'grand_entrance', 'ferris_wheel', 'carousel', 'coaster_station',
+      'water_slides', 'lagoon_pool', 'indoor_hall', 'garden_bistro'
+    ];
+    this.loadedSprites = {};
+    keys.forEach(k => {
+      this.loadedSprites[k] = SpriteCleaner.cleanTexture(this, k + '_raw', k);
+    });
+
+    this.cameras.main.setBackgroundColor('#7cb875');
+    this.cameras.main.setBounds(-1850, -320, 3700, 2250);
+
+    this.buildTerrainAndPaths();
+    this.placeLandmarksAndAttractions();
+    this.buildSceneryFoliage();
+    this.spawnCharacters();
+    this.buildNightLighting();
+    this.setupInput();
+    this.setupUI();
+
+    this.setZone('all');
+    this.renderFamilyDock();
+    this.updateInspector();
+  }
+
+  /* --------------------------------------------------------------------------
+     6A. LUSH ISOMETRIC TERRAIN, BRICK BORDERED PATHWAYS & PLAZAS
+     -------------------------------------------------------------------------- */
+  buildTerrainAndPaths() {
+    const g = this.add.graphics().setDepth(0);
+
+    // 3D Earth Cliff Base
+    const c0 = IsoMath.toScreen(0, 0);
+    const c1 = IsoMath.toScreen(46, 0);
+    const c2 = IsoMath.toScreen(46, 46);
+    const c3 = IsoMath.toScreen(0, 46);
+
+    g.fillStyle(0x6b533e, 1);
+    g.fillPoints([c3, c2, { x: c2.x, y: c2.y + 38 }, { x: c3.x, y: c3.y + 38 }], true);
+    g.fillStyle(0x544030, 1);
+    g.fillPoints([c2, c1, { x: c1.x, y: c1.y + 38 }, { x: c2.x, y: c2.y + 38 }], true);
+
+    // Rich Grass Ground
+    g.fillStyle(0x82c272, 1);
+    g.fillPoints([c0, c1, c2, c3], true);
+
+    // Zone Ground Pads
+    this.drawIsoRect(g, 2, 2, 20, 20, 0x8ccb79, 0x6ea85e, 2);     // Outdoor Theme Park
+    this.drawIsoRect(g, 2, 24, 19, 19, 0xf2dfb8, 0xd4be92, 2);    // Water Park Tropical Deck
+    this.drawIsoRect(g, 25, 19, 18, 17, 0xdde5ec, 0xb8c7d4, 2);   // Indoor Park Courtyard
+
+    // Subtle Isometric Lawn Grid
+    g.lineStyle(1, 0x67a65c, 0.2);
+    for (let i = 0; i <= 46; i += 2) {
+      const a = IsoMath.toScreen(i, 0), b = IsoMath.toScreen(i, 46);
+      g.lineBetween(a.x, a.y, b.x, b.y);
+      const c = IsoMath.toScreen(0, i), d = IsoMath.toScreen(46, i);
+      g.lineBetween(c.x, c.y, d.x, d.y);
+    }
+
+    // Warm Sandstone Brick Pathways with Terracotta Trim
+    const paths = [
+      // Grand Entrance to Central Plaza
+      [23, 24, 2.4, 15],
+      // Central Plaza Hub
+      [19, 19, 6.5, 6.5],
+      // Theme Park Promenade
+      [11, 13, 8, 2.2],
+      [16, 12, 2.2, 8],
+      [9, 18, 10, 2.2],
+      // Water Park Promenade
+      [11, 29, 8, 2.2],
+      [15, 24, 2.2, 8],
+      // WonderDome Indoor Hall Promenade
+      [25.5, 22, 6, 2.4],
+      // Garden Bistro Walkway
+      [25.5, 16, 3.5, 3]
+    ];
+    paths.forEach(([x, y, w, h]) => this.drawIsoRect(g, x, y, w, h, 0xefe3c8, 0xc99e74, 2));
+
+    // Decorative Central Plaza Fountain
+    const fp = IsoMath.toScreen(22, 22);
+    const fg = this.add.graphics().setDepth(IsoMath.depth(22, 22, 12));
+    fg.fillStyle(0xdbe4ea, 1); fg.fillEllipse(fp.x, fp.y, 74, 37);
+    fg.lineStyle(2, 0x94a3b8, 1); fg.strokeEllipse(fp.x, fp.y, 74, 37);
+    fg.fillStyle(0x38bdf8, 1); fg.fillEllipse(fp.x, fp.y - 2, 60, 28);
+    fg.fillStyle(0xffffff, 0.9); fg.fillEllipse(fp.x, fp.y - 14, 16, 9);
+    this.tweens.add({ targets: fg, y: -2.5, duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
+  drawIsoRect(g, gx, gy, gw, gh, fill, stroke = null, lw = 1) {
+    const pts = [
+      IsoMath.toScreen(gx, gy),
+      IsoMath.toScreen(gx + gw, gy),
+      IsoMath.toScreen(gx + gw, gy + gh),
+      IsoMath.toScreen(gx, gy + gh)
+    ];
+    g.fillStyle(fill, 1);
+    g.fillPoints(pts, true);
+    if (stroke) {
+      g.lineStyle(lw, stroke, 1);
+      g.strokePoints([...pts, pts[0]], false);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     6B. PLACE YOUR UPLOADED 3D ISOMETRIC PNG ASSETS + LIVE ANIMATIONS
+     -------------------------------------------------------------------------- */
+  placeLandmarksAndAttractions() {
+    // Helper to place a cleaned PNG sprite on the isometric grid with proper depth
+    const placeSprite = (key, gx, gy, targetWidth, offsetY = 0, layer = 30) => {
+      const p = IsoMath.toScreen(gx, gy);
+      if (this.loadedSprites[key]) {
+        const img = this.add.image(p.x, p.y + offsetY, key);
+        const scale = targetWidth / img.width;
+        img.setScale(scale);
+        img.setDepth(IsoMath.depth(gx, gy, layer));
+        return img;
+      }
+      return null;
+    };
+
+    // 1. GRAND ENTRANCE GATEHOUSE
+    placeSprite('grand_entrance', 24, 39, 310, -48, 35);
+    this.addLabel(24, 42.5, 'GRAND ENTRANCE');
+
+    // 2. SKY DRAGON COASTER STATION + LIVE ELEVATED LOOP & 3-CAR TRAIN
+    placeSprite('coaster_station', 8, 9, 290, -28, 32);
+    this.buildCoasterLoopAndTrain(8, 9);
+    this.addLabel(8, 13.5, 'SKY DRAGON COASTER');
+
+    // 3. WONDER WHEEL + GLOWING ROTATING CABINS OVERLAY
+    const wheelSprite = placeSprite('ferris_wheel', 17, 7, 295, -62, 34);
+    this.ferrisCenter = IsoMath.toScreen(17, 7, 86);
+    this.ferrisOverlay = this.add.graphics().setDepth(IsoMath.depth(17, 7, 38));
+    this.addLabel(17, 11.5, 'WONDER WHEEL');
+
+    // 4. STARLIGHT CAROUSEL + TWINKLING MARQUEE LIGHTS
+    placeSprite('carousel', 14, 16, 225, -36, 33);
+    this.carouselCenter = IsoMath.toScreen(14, 16, 42);
+    this.carouselLights = this.add.graphics().setDepth(IsoMath.depth(14, 16, 36));
+    this.addLabel(14, 19.5, 'STARLIGHT CAROUSEL');
+
+    // 5. TURBO BUMPER CARS ARENA (Live moving bumper cars)
+    const bpGfx = this.add.graphics().setDepth(IsoMath.depth(6, 17, 15));
+    this.drawIsoRect(bpGfx, 4, 15, 4.4, 4.4, 0x475569, 0xfacc15, 3);
+    this.bumperCenter = { gx: 6.2, gy: 17.2 };
+    this.bumperCarsGfx = this.add.graphics().setDepth(IsoMath.depth(6, 17, 22));
+    this.addLabel(6.2, 20.2, 'TURBO BUMPER CARS');
+
+    // 6. SPIRAL WATER SLIDES TOWER + ANIMATED SLIDING CHARACTERS
+    placeSprite('water_slides', 7, 28, 310, -56, 34);
+    this.addLabel(7, 32.5, 'SPIRAL TIDAL SLIDES');
+
+    // 7. WATERFALL LAGOON POOL + ANIMATED WATER RIPPLES
+    placeSprite('lagoon_pool', 14, 35, 340, -18, 28);
+    this.lagoonRipples = this.add.graphics().setDepth(IsoMath.depth(14, 35, 31));
+    this.addLabel(14, 39.5, 'WATERFALL LAGOON POOL');
+
+    // 8. WONDERDOME CUTAWAY INDOOR HALL (Arcade, Trampolines, Soft Play & Snack Bar)
+    placeSprite('indoor_hall', 34, 25, 440, -34, 26);
+    this.addLabel(34, 31.2, 'WONDERDOME INDOOR PARK');
+
+    // 9. GARDEN BISTRO CAFE
+    placeSprite('garden_bistro', 28, 13, 280, -32, 32);
+    this.addLabel(28, 17, 'GARDEN BISTRO CAFE');
+  }
+
+  buildCoasterLoopAndTrain(cx, cy) {
+    const trackPts = [];
+    const steps = 90;
+    for (let i = 0; i <= steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      const gx = cx - 1.5 + Math.cos(a) * 4.6;
+      const gy = cy - 1.2 + Math.sin(a) * 3.5;
+      const gz = 38 + Math.sin(a * 2) * 22;
+      trackPts.push({ gx, gy, gz, s: IsoMath.toScreen(gx, gy, gz), gnd: IsoMath.toScreen(gx, gy, 0) });
+    }
+    const tg = this.add.graphics().setDepth(IsoMath.depth(cx - 2, cy - 2, 24));
+    for (let i = 0; i < steps; i += 9) {
+      tg.lineStyle(3, 0x94a3b8, 0.85);
+      tg.lineBetween(trackPts[i].gnd.x, trackPts[i].gnd.y, trackPts[i].s.x, trackPts[i].s.y);
+    }
+    tg.lineStyle(8, 0x334155, 1);
+    tg.strokePoints(trackPts.map(p => p.s), false);
+    tg.lineStyle(4, 0xef4444, 1);
+    tg.strokePoints(trackPts.map(p => p.s), false);
+
+    this.coasterTrack = trackPts;
+    this.coasterCars = [0, 1, 2].map(idx => {
+      const car = this.add.container(0, 0).setDepth(IsoMath.depth(cx, cy, 48));
+      const cg = this.add.graphics();
+      cg.fillStyle(idx === 0 ? 0xfacc15 : 0xef4444, 1);
+      cg.fillRoundedRect(-9, -6, 18, 11, 4);
+      cg.lineStyle(1.5, 0x1e293b, 1);
+      cg.strokeRoundedRect(-9, -6, 18, 11, 4);
+      car.add(cg);
+      return car;
+    });
+  }
+
+  addLabel(gx, gy, text) {
+    const p = IsoMath.toScreen(gx, gy);
+    this.add.text(p.x, p.y, text, {
+      fontFamily: 'DM Sans', fontSize: '10px', fontStyle: '800',
+      color: '#173245', stroke: '#ffffff', strokeThickness: 3.5
+    }).setOrigin(0.5).setDepth(IsoMath.depth(gx, gy, 65));
+  }
+
+  /* --------------------------------------------------------------------------
+     6C. DENSE LANDSCAPING: PINE & OAK TREES, FLOWERBEDS, BENCHES & LAMPS
+     -------------------------------------------------------------------------- */
+  buildSceneryFoliage() {
+    const treeCoords = [
+      [2,2],[4,2],[7,2],[12,2],[21,3],[23,6],[25,9],[32,10],[35,13],[39,16],[42,18],
+      [2,12],[2,16],[2,21],[3,23],[19,25],[20,30],[20,36],[3,36],[4,41],[9,42],[15,42],
+      [28,39],[33,39],[38,38],[42,34],[43,28],[20,14],[22,17],[18,22],[26,28]
+    ];
+    treeCoords.forEach(([gx, gy], idx) => {
+      const p = IsoMath.toScreen(gx, gy);
+      const k = 0.92 + (idx % 3) * 0.14;
+      const g = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 25));
+      g.fillStyle(0x1f3d2b, 0.24);
+      g.fillEllipse(p.x, p.y + 2, 32 * k, 15 * k);
+      g.fillStyle(0x784f34, 1);
+      g.fillRoundedRect(p.x - 3 * k, p.y - 21 * k, 6 * k, 23 * k, 2);
+      const greens = [0x35965e, 0x4cb06d, 0x67c278];
+      g.fillStyle(greens[idx % 3], 1);
+      g.fillCircle(p.x, p.y - 30 * k, 16 * k);
+      g.fillCircle(p.x - 10 * k, p.y - 24 * k, 11 * k);
+      g.fillCircle(p.x + 10 * k, p.y - 24 * k, 11 * k);
+      g.lineStyle(1.5, 0x22543a, 0.55);
+      g.strokeCircle(p.x, p.y - 30 * k, 16 * k);
+    });
+
+    // Flower planters & glowing night lamps along avenues
+    [[18.5,18.5],[25.5,18.5],[18.5,25.5],[25.5,25.5],[21.5,29],[21.5,35],[13,20],[16,24]].forEach(([gx, gy]) => {
+      const p = IsoMath.toScreen(gx, gy);
+      const fg = this.add.graphics().setDepth(IsoMath.depth(gx, gy, 9));
+      fg.fillStyle(0x4d9454, 1); fg.fillEllipse(p.x, p.y, 26, 13);
+      [0xff758f, 0xffd166, 0xffffff, 0x70d6ff].forEach((col, i) => {
+        const a = (i / 4) * Math.PI * 2;
+        fg.fillStyle(col, 1);
+        fg.fillCircle(p.x + Math.cos(a) * 7, p.y + Math.sin(a) * 3.5, 2.6);
+      });
+
+      const lg = this.add.graphics().setDepth(IsoMath.depth(gx + 0.5, gy, 24));
+      lg.lineStyle(2.5, 0x334155, 1); lg.lineBetween(p.x + 14, p.y, p.x + 14, p.y - 26);
+      lg.fillStyle(0xfef08a, 1); lg.fillCircle(p.x + 14, p.y - 28, 3.8);
+      const glow = this.add.circle(p.x + 14, p.y - 25, 26, 0xfde047, 0).setDepth(IsoMath.depth(gx, gy, 90));
+      this.lampGlows.push(glow);
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     6D. ILLUSTRATED FAMILY & PARK VISITORS
+     -------------------------------------------------------------------------- */
+  spawnCharacters() {
+    FamilyData.forEach(member => {
+      this.actors.push(this.createActorEntity(member, false));
+    });
+
+    const shirts = [0xf59e0b, 0x3b82f6, 0x10b981, 0x8b5cf6, 0xec4899, 0x06b6d4, 0xf97316];
+    const skins = [0xd89b74, 0xf1c29b, 0xa87152, 0xe5b28a];
+    for (let i = 0; i < 26; i++) {
+      const isChild = i % 4 === 0;
+      const g = {
+        id: 'guest_' + i,
+        name: 'Guest #' + (i + 1),
+        role: isChild ? 'Child Visitor' : 'Park Visitor',
+        age: isChild ? 6 : 25 + (i % 16),
+        skin: skins[i % skins.length],
+        shirt: shirts[i % shirts.length],
+        pants: 0x334155,
+        hair: 0x1e293b,
+        scale: isChild ? 0.76 : 0.96,
+        gx: 9 + (i * 4.7) % 27,
+        gy: 11 + (i * 6.3) % 26,
+        speed: isChild ? 2.3 : 2.0,
+        energy: 85, happiness: 85, hunger: 85, thirst: 85,
+        action: 'Exploring the park', state: 'idle',
+        prefs: AttractionsData.map(a => a.id)
+      };
+      this.actors.push(this.createActorEntity(g, true));
+    }
+  }
+
+  createActorEntity(data, isGuest) {
+    const pos = IsoMath.toScreen(data.gx, data.gy);
+    const root = this.add.container(pos.x, pos.y);
+    const k = data.scale;
+
+    const shadow = this.add.ellipse(0, 2, 22 * k, 10 * k, 0x1e3a2f, 0.28);
+    root.add(shadow);
+
+    const body = this.add.container(0, 0);
+    const g = this.add.graphics();
+
+    g.fillStyle(data.pants, 1);
+    g.fillRoundedRect(-6.5 * k, -10 * k, 5.5 * k, 11 * k, 2.5);
+    g.fillRoundedRect(1 * k, -10 * k, 5.5 * k, 11 * k, 2.5);
+
+    g.fillStyle(data.shirt, 1);
+    g.fillRoundedRect(-8.5 * k, -24 * k, 17 * k, 16 * k, 5);
+    g.lineStyle(1.5, 0x1e293b, 0.75);
+    g.strokeRoundedRect(-8.5 * k, -24 * k, 17 * k, 16 * k, 5);
+
+    g.fillStyle(data.skin, 1);
+    g.fillRoundedRect(-12 * k, -22 * k, 4 * k, 13 * k, 2);
+    g.fillRoundedRect(8 * k, -22 * k, 4 * k, 13 * k, 2);
+
+    g.fillStyle(data.skin, 1);
+    g.fillCircle(0, -32 * k, 8.5 * k);
+    g.lineStyle(1.5, 0x1e293b, 0.75);
+    g.strokeCircle(0, -32 * k, 8.5 * k);
+
+    if (data.hijab) {
+      g.fillStyle(data.hijab, 1);
+      g.fillCircle(0, -32 * k, 9.5 * k);
+      g.fillRoundedRect(-8.5 * k, -31 * k, 17 * k, 14 * k, 6);
+      g.fillStyle(data.skin, 1);
+      g.fillCircle(0, -30 * k, 6.2 * k);
+    } else {
+      g.fillStyle(data.hair, 1);
+      g.fillEllipse(0, -38 * k, 15 * k, 7 * k);
+    }
+
+    g.fillStyle(0x1e293b, 1);
+    g.fillCircle(-2.6 * k, -31.5 * k, 1.1 * k);
+    g.fillCircle(2.6 * k, -31.5 * k, 1.1 * k);
+    g.lineStyle(1.2, 0x991b1b, 1);
+    g.beginPath();
+    g.arc(0, -29 * k, 2.5 * k, 0.2, Math.PI - 0.2);
+    g.strokePath();
+
+    body.add(g);
+    root.add(body);
+
+    if (!isGuest) {
+      const tag = this.add.text(0, -48 * k, data.name, {
+        fontFamily: 'Fredoka', fontSize: '10px', fontStyle: '600',
+        color: '#ffffff', backgroundColor: '#173b4f', padding: { x: 5, y: 1 }
+      }).setOrigin(0.5);
+      root.add(tag);
+    }
+
+    const bubble = this.add.container(0, -64 * k).setVisible(false);
+    const bBg = this.add.graphics();
+    bBg.fillStyle(0xffffff, 0.96);
+    bBg.lineStyle(1.5, 0x94a3b8, 1);
+    bBg.fillRoundedRect(-54, -13, 108, 22, 8);
+    bBg.strokeRoundedRect(-54, -13, 108, 22, 8);
+    bBg.fillTriangle(-4, 9, 4, 9, 0, 14);
+    const bTxt = this.add.text(0, -2, '', {
+      fontFamily: 'DM Sans', fontSize: '9px', fontStyle: '700', color: '#1e3a4c'
+    }).setOrigin(0.5);
+    bubble.add([bBg, bTxt]);
+    root.add(bubble);
+
+    return {
+      data, isGuest, root, body, bubble, bTxt,
+      targetGx: null, targetGy: null, targetAttr: null,
+      timer: Math.random() * 1.8, walkPhase: Math.random() * 6, speechTimer: 0
+    };
+  }
+
+  buildNightLighting() {
+    this.nightOverlay = this.add.rectangle(0, 0, 9000, 9000, 0x0f172a, 0)
+      .setScrollFactor(0)
+      .setDepth(999999);
+  }
+
+  /* --------------------------------------------------------------------------
+     6E. SIMULATION LOOP: ATTRACTIONS, AI & FAMILY INTERACTIONS
+     -------------------------------------------------------------------------- */
+  update(time, delta) {
+    const dt = Math.min(delta / 1000, 0.05) * (SimState.paused ? 0 : SimState.speed);
+    this.animClock += dt;
+
+    if (dt > 0) {
+      SimState.minutes += dt * 2.4;
+      if (SimState.minutes >= 1440) {
+        SimState.minutes -= 1440;
+        SimState.day++;
+        SimState.weatherIndex = (SimState.weatherIndex + 1) % WEATHERS.length;
+      }
+    }
+
+    this.updateLighting();
+    this.animateRides();
+    this.actors.forEach(a => this.updateActorAI(a, dt));
+    this.checkFamilyInteractions(dt);
+
+    if (time - this.lastUiSync > 300) {
+      this.lastUiSync = time;
+      this.syncHUD();
+    }
+  }
+
+  updateLighting() {
+    const hr = SimState.minutes / 60;
+    let alpha = 0, tint = 0x0f172a;
+    if (hr >= 19.5 || hr < 5.5) { alpha = 0.42; tint = 0x0b132b; }
+    else if (hr >= 17.5) { alpha = ((hr - 17.5) / 2) * 0.42; tint = 0x2b193d; }
+    else if (hr < 7.0) { alpha = ((7.0 - hr) / 1.5) * 0.34; tint = 0x1e293b; }
+
+    this.nightOverlay.setFillStyle(tint, alpha);
+    const lampAlpha = alpha > 0.16 ? Math.min(0.55, alpha * 1.1) : 0;
+    this.lampGlows.forEach(g => g.setAlpha(lampAlpha));
+  }
+
+  animateRides() {
+    const t = this.animClock;
+
+    // 1. Coaster Train
+    if (this.coasterTrack && this.coasterCars) {
+      const len = this.coasterTrack.length - 1;
+      this.coasterCars.forEach((car, idx) => {
+        const u = ((t * 0.14 - idx * 0.025) % 1 + 1) % 1;
+        const p = this.coasterTrack[Math.floor(u * len)];
+        car.setPosition(p.s.x, p.s.y - 4);
+        car.setDepth(IsoMath.depth(p.gx, p.gy, 50));
+      });
+    }
+
+    // 2. Ferris Wheel Orbiting Gondola Lights
+    if (this.ferrisOverlay && this.ferrisCenter) {
+      const g = this.ferrisOverlay;
+      g.clear();
+      const R = 74;
+      for (let i = 0; i < 12; i++) {
+        const a = t * 0.32 + (i * Math.PI * 2) / 12;
+        const gx = this.ferrisCenter.x + Math.cos(a) * R * 0.85;
+        const gy = this.ferrisCenter.y + Math.sin(a) * R;
+        g.fillStyle(0xfef08a, 0.85);
+        g.fillCircle(gx, gy, 3.2);
+      }
+    }
+
+    // 3. Carousel Twinkling Lights
+    if (this.carouselLights && this.carouselCenter) {
+      const g = this.carouselLights;
+      g.clear();
+      for (let i = 0; i < 8; i++) {
+        const a = t * 1.2 + (i * Math.PI * 2) / 8;
+        const lx = this.carouselCenter.x + Math.cos(a) * 52;
+        const ly = this.carouselCenter.y + Math.sin(a) * 24;
+        g.fillStyle(i % 2 === 0 ? 0xfef08a : 0xfda4af, 0.9);
+        g.fillCircle(lx, ly, 3);
+      }
+    }
+
+    // 4. Bumper Cars Arena
+    if (this.bumperCarsGfx && this.bumperCenter) {
+      const g = this.bumperCarsGfx;
+      g.clear();
+      for (let i = 0; i < 4; i++) {
+        const bx = this.bumperCenter.gx + Math.sin(t * 1.4 + i * 1.7) * 1.3;
+        const by = this.bumperCenter.gy + Math.cos(t * 1.2 + i * 2.1) * 1.3;
+        const bp = IsoMath.toScreen(bx, by, 4);
+        g.fillStyle([0xef4444, 0x3b82f6, 0xfacc15, 0x10b981][i], 1);
+        g.fillEllipse(bp.x, bp.y, 14, 9);
+        g.lineStyle(1.5, 0x0f172a, 1);
+        g.strokeEllipse(bp.x, bp.y, 14, 9);
+      }
+    }
+
+    // 5. Lagoon Pool Water Ripples
+    if (this.lagoonRipples) {
+      const g = this.lagoonRipples;
+      g.clear();
+      g.lineStyle(1.5, 0xffffff, 0.5);
+      for (let i = 0; i < 4; i++) {
+        const wave = Math.sin(t * 2.2 + i) * 7;
+        const wp = IsoMath.toScreen(13.2 + i * 0.6, 34.2 + i * 0.5, 2);
+        g.strokeEllipse(wp.x + wave, wp.y, 20, 9);
+      }
+    }
+  }
+
+  updateActorAI(actor, dt) {
+    const d = actor.data;
+    if (dt <= 0) return;
+
+    d.energy = Math.max(10, d.energy - dt * 0.14);
+    d.hunger = Math.max(10, d.hunger - dt * 0.12);
+    d.thirst = Math.max(10, d.thirst - dt * 0.15);
+    if (d.state !== 'riding') d.happiness = Math.max(30, d.happiness - dt * 0.04);
+
+    if (actor.speechTimer > 0) {
+      actor.speechTimer -= dt;
+      if (actor.speechTimer <= 0) actor.bubble.setVisible(false);
+    }
+
+    if (d.state === 'riding') {
+      actor.timer -= dt;
+      const attr = actor.targetAttr;
+      if (attr) {
+        if (attr.type === 'slides') {
+          const prog = 1 - Math.max(0, actor.timer / attr.duration);
+          const sGx = attr.gx + Math.sin(prog * Math.PI * 3) * 0.9;
+          const sGy = attr.gy + prog * 2.6;
+          const sGz = (1 - prog) * 54;
+          const sp = IsoMath.toScreen(sGx, sGy, sGz);
+          actor.root.setPosition(sp.x, sp.y);
+          actor.root.setDepth(IsoMath.depth(sGx, sGy, 48));
+        } else if (attr.type === 'pool') {
+          const ang = this.animClock * 0.8 + actor.walkPhase;
+          const wGx = attr.gx + Math.cos(ang) * 1.4;
+          const wGy = attr.gy + Math.sin(ang) * 1.2;
+          const wp = IsoMath.toScreen(wGx, wGy, -3);
+          actor.root.setPosition(wp.x, wp.y);
+          actor.root.setDepth(IsoMath.depth(wGx, wGy, 33));
+        } else if (attr.type === 'coaster' || attr.type === 'ferris') {
+          actor.root.setVisible(false);
+        } else {
+          // Visible activity bounce inside Arcade, Trampolines, Soft Play, Bistro
+          actor.body.y = Math.abs(Math.sin(this.animClock * 6)) * -4.5;
+        }
+      }
+
+      if (actor.timer <= 0) {
+        actor.root.setVisible(true);
+        actor.body.y = 0;
+        d.state = 'idle';
+        if (attr) {
+          d.gx = attr.queueGx;
+          d.gy = attr.queueGy;
+          d.happiness = Math.min(100, d.happiness + attr.thrill);
+          d.energy = Math.max(10, Math.min(100, d.energy - attr.energyCost));
+          if (attr.type === 'food') {
+            d.hunger = Math.min(100, d.hunger + 48);
+            d.thirst = Math.min(100, d.thirst + 42);
+          }
+          d.action = 'Finished ' + attr.name;
+          if (!actor.isGuest) {
+            SimState.ridesCompleted++;
+            this.say(actor, attr.type === 'food' ? 'Delicious meal!' : 'That was so fun!');
+            AudioEngine.playTone(587.33, 0.2);
+          }
+        }
+        actor.targetAttr = null;
+      }
+      return;
+    }
+
+    if (d.state === 'walking' && actor.targetGx !== null) {
+      const dx = actor.targetGx - d.gx;
+      const dy = actor.targetGy - d.gy;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist < 0.25) {
+        d.gx = actor.targetGx;
+        d.gy = actor.targetGy;
+        actor.body.y = 0;
+        this.boardAttraction(actor);
+      } else {
+        const step = d.speed * dt;
+        d.gx += (dx / dist) * Math.min(step, dist);
+        d.gy += (dy / dist) * Math.min(step, dist);
+        actor.walkPhase += dt * 11;
+        actor.body.y = -Math.abs(Math.sin(actor.walkPhase)) * 3.2;
+      }
+      const sp = IsoMath.toScreen(d.gx, d.gy);
+      actor.root.setPosition(sp.x, sp.y);
+      actor.root.setDepth(IsoMath.depth(d.gx, d.gy, 42));
+      return;
+    }
+
+    actor.timer -= dt;
+    if (actor.timer <= 0) {
+      this.decideNextActivity(actor);
+    }
+  }
+
+  decideNextActivity(actor, forcedAttrId = null) {
+    const d = actor.data;
+    let chosen = null;
+
+    if (forcedAttrId) {
+      chosen = AttractionsData.find(a => a.id === forcedAttrId);
+    } else if (d.hunger < 45 || d.thirst < 45) {
+      chosen = AttractionsData.find(a => a.id === 'bistro');
+    } else {
+      const pool = d.prefs.map(id => AttractionsData.find(a => a.id === id)).filter(Boolean);
+      chosen = pool[Math.floor(Math.random() * pool.length)] || AttractionsData[0];
+    }
+
+    actor.targetAttr = chosen;
+    actor.targetGx = chosen.queueGx + (Math.random() - 0.5) * 0.8;
+    actor.targetGy = chosen.queueGy + (Math.random() - 0.5) * 0.8;
+    d.state = 'walking';
+    d.action = 'Walking to ' + chosen.name;
+
+    if (!actor.isGuest && Math.random() < 0.45) {
+      this.say(actor, 'Let us try ' + chosen.name + '!');
+    }
+  }
+
+  boardAttraction(actor) {
+    const d = actor.data;
+    const attr = actor.targetAttr;
+    if (!attr) {
+      d.state = 'idle';
+      actor.timer = 2;
+      return;
+    }
+    d.state = 'riding';
+    actor.timer = attr.duration;
+    d.action = (attr.type === 'pool' ? 'Swimming at ' :
+                attr.type === 'food' ? 'Dining at ' : 'Enjoying ') + attr.name;
+
+    if (attr.type !== 'coaster' && attr.type !== 'ferris') {
+      const ap = IsoMath.toScreen(attr.gx, attr.gy, 4);
+      actor.root.setPosition(ap.x, ap.y);
+      actor.root.setDepth(IsoMath.depth(attr.gx, attr.gy, 40));
+    }
+  }
+
+  checkFamilyInteractions(dt) {
+    const fam = this.actors.filter(a => !a.isGuest);
+    for (let i = 0; i < fam.length; i++) {
+      for (let j = i + 1; j < fam.length; j++) {
+        const a = fam[i], b = fam[j];
+        if (a.speechTimer > 0 || b.speechTimer > 0) continue;
+        const dist = Math.hypot(a.data.gx - b.data.gx, a.data.gy - b.data.gy);
+        if (dist < 1.6 && Math.random() < dt * 0.22) {
+          a.data.happiness = Math.min(100, a.data.happiness + 3);
+          b.data.happiness = Math.min(100, b.data.happiness + 3);
+          const line = a.data.lines[Math.floor(Math.random() * a.data.lines.length)];
+          this.say(a, line);
+        }
+      }
+    }
+  }
+
+  say(actor, text) {
+    actor.bTxt.setText(text);
+    actor.bubble.setVisible(true);
+    actor.speechTimer = 3.2;
+  }
+
+  /* --------------------------------------------------------------------------
+     6F. CAMERA & UI CONTROLS
+     -------------------------------------------------------------------------- */
+  setupInput() {
+    this.input.on('pointerdown', p => {
+      this.dragState = { x: p.x, y: p.y, sx: this.cameras.main.scrollX, sy: this.cameras.main.scrollY, moved: false };
+    });
+
+    this.input.on('pointermove', p => {
+      if (!this.dragState || !p.isDown) return;
+      const dx = p.x - this.dragState.x;
+      const dy = p.y - this.dragState.y;
+      if (Math.hypot(dx, dy) > 6) {
+        this.dragState.moved = true;
+        this.cameras.main.stopFollow();
+      }
+      if (this.dragState.moved) {
+        this.cameras.main.scrollX = this.dragState.sx - dx / this.cameras.main.zoom;
+        this.cameras.main.scrollY = this.dragState.sy - dy / this.cameras.main.zoom;
+      }
+    });
+
+    this.input.on('pointerup', p => {
+      if (this.dragState && !this.dragState.moved) {
+        const wp = this.cameras.main.getWorldPoint(p.x, p.y);
+        const hit = this.actors
+          .filter(a => !a.isGuest && a.root.visible)
+          .find(a => Math.hypot(a.root.x - wp.x, (a.root.y - 18) - wp.y) < 34);
+        if (hit) this.selectCharacter(hit.data.id);
+      }
+      this.dragState = null;
+    });
+
+    this.input.on('wheel', (p, go, dx, dy) => {
+      const cam = this.cameras.main;
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom - dy * 0.0006, 0.34, 1.45));
+    });
+  }
+
+  setupUI() {
+    document.querySelectorAll('[data-zone]').forEach(btn => {
+      btn.onclick = () => {
+        SimState.selectedId = null;
+        this.renderFamilyDock();
+        this.updateInspector();
+        this.setZone(btn.dataset.zone);
+      };
+    });
+
+    document.querySelectorAll('[data-speed]').forEach(btn => {
+      btn.onclick = () => {
+        SimState.speed = Number(btn.dataset.speed);
+        SimState.paused = false;
+        document.getElementById('pauseBtn').textContent = 'II';
+        document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('active', b === btn));
+      };
+    });
+
+    document.getElementById('pauseBtn').onclick = () => {
+      SimState.paused = !SimState.paused;
+      document.getElementById('pauseBtn').textContent = SimState.paused ? 'Play' : 'II';
+    };
+
+    document.getElementById('overviewBtn').onclick = () => {
+      SimState.selectedId = null;
+      this.renderFamilyDock();
+      this.updateInspector();
+      this.setZone('all');
+    };
+
+    document.getElementById('audioBtn').onclick = (e) => {
+      const on = AudioEngine.toggle();
+      e.target.textContent = on ? 'SFX On' : 'SFX Off';
+      e.target.classList.toggle('active', on);
+      if (on) AudioEngine.playTone(659.25, 0.2);
+    };
+  }
+
+  setZone(zoneKey) {
+    SimState.zone = zoneKey;
+    const z = ZonesConfig[zoneKey];
+    const p = IsoMath.toScreen(z.gx, z.gy);
+    this.cameras.main.stopFollow();
+    this.cameras.main.zoomTo(z.zoom, 420);
+    this.cameras.main.pan(p.x, p.y, 420, 'Power2');
+
+    document.querySelectorAll('[data-zone]').forEach(b => b.classList.toggle('active', b.dataset.zone === zoneKey));
+    document.getElementById('zoneTitle').textContent = z.title;
+    document.getElementById('zoneDesc').textContent = z.desc;
+  }
+
+  selectCharacter(id) {
+    SimState.selectedId = id;
+    const actor = this.actors.find(a => a.data.id === id);
+    if (!actor) return;
+    this.cameras.main.startFollow(actor.root, true, 0.08, 0.08);
+    this.cameras.main.zoomTo(1.0, 350);
+    this.renderFamilyDock();
+    this.updateInspector();
+    this.showToast('Following ' + actor.data.name);
+  }
+
+  renderFamilyDock() {
+    const dock = document.getElementById('familyDock');
+    dock.innerHTML = '';
+    FamilyData.forEach(member => {
+      const card = document.createElement('button');
+      card.className = 'familycard' + (SimState.selectedId === member.id ? ' selected' : '');
+
+      const face = document.createElement('div');
+      face.className = 'face';
+      const portrait = PortraitStudio.renderPortrait(member, 84);
+      const clone = document.createElement('canvas');
+      clone.width = 84; clone.height = 84;
+      clone.getContext('2d').drawImage(portrait, 0, 0);
+      face.appendChild(clone);
+
+      const name = document.createElement('b');
+      name.textContent = member.name;
+
+      const act = document.createElement('small');
+      act.textContent = member.action;
+
+      const bars = document.createElement('div');
+      bars.className = 'minibars';
+      bars.innerHTML = `
+        <span><i style="width:${member.energy}%;background:#3bb996"></i></span>
+        <span><i style="width:${member.happiness}%;background:#f5b841"></i></span>
+      `;
+
+      card.append(face, name, act, bars);
+      card.onclick = () => this.selectCharacter(member.id);
+      dock.appendChild(card);
+    });
+  }
+
+  updateInspector() {
+    const panel = document.getElementById('inspector');
+    const member = FamilyData.find(m => m.id === SimState.selectedId);
+    if (!member) {
+      panel.classList.remove('show');
+      return;
+    }
+    panel.classList.add('show');
+
+    const av = document.getElementById('insAvatar');
+    av.innerHTML = '';
+    const portrait = PortraitStudio.renderPortrait(member, 84);
+    const clone = document.createElement('canvas');
+    clone.width = 84; clone.height = 84;
+    clone.getContext('2d').drawImage(portrait, 0, 0);
+    av.appendChild(clone);
+
+    document.getElementById('insName').textContent = member.name;
+    document.getElementById('insRole').textContent = `${member.role} · Age ${member.age}`;
+    document.getElementById('insAction').textContent = member.action;
+
+    [['energy', 'energy'], ['fun', 'happiness'], ['hunger', 'hunger'], ['thirst', 'thirst']].forEach(([domKey, prop]) => {
+      const val = Math.round(member[prop]);
+      document.getElementById(domKey + 'Val').textContent = val + '%';
+      document.getElementById(domKey + 'Bar').style.width = val + '%';
+    });
+
+    const chips = document.getElementById('goalChips');
+    if (chips.dataset.owner !== member.id) {
+      chips.dataset.owner = member.id;
+      chips.innerHTML = '';
+      [
+        ['Coaster', 'coaster'],
+        ['Water Slide', 'slides'],
+        ['Lagoon Pool', 'pool'],
+        ['Indoor Arcade', 'arcade'],
+        ['Garden Bistro', 'bistro']
+      ].forEach(([label, attrId]) => {
+        const b = document.createElement('button');
+        b.className = 'chip';
+        b.textContent = label;
+        b.onclick = () => {
+          const actor = this.actors.find(a => a.data.id === member.id);
+          if (actor) {
+            this.decideNextActivity(actor, attrId);
+            this.showToast(`${member.name} is heading to ${label}`);
+          }
+        };
+        chips.appendChild(b);
+      });
+    }
+  }
+
+  syncHUD() {
+    const hh = Math.floor(SimState.minutes / 60);
+    const mm = Math.floor(SimState.minutes % 60);
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    const hr12 = hh % 12 || 12;
+    const isNight = hh >= 19 || hh < 6;
+
+    document.getElementById('clock').textContent = `${String(hr12).padStart(2, '0')}:${String(mm).padStart(2, '0')} ${ampm}`;
+    document.getElementById('day').textContent = `DAY ${SimState.day} · ${DAYS[(SimState.day + 5) % 7].toUpperCase()} · ${WEATHERS[SimState.weatherIndex]}`;
+    document.getElementById('skyBadge').classList.toggle('night', isNight);
+
+    document.getElementById('guestCount').textContent = this.actors.length;
+    document.getElementById('rideCount').textContent = AttractionsData.length;
+    document.getElementById('ridesDone').textContent = SimState.ridesCompleted;
+
+    const avgMood = Math.round(FamilyData.reduce((s, m) => s + m.happiness, 0) / FamilyData.length);
+    document.getElementById('parkMood').textContent = avgMood + '%';
+
+    this.updateInspector();
+    this.renderFamilyDock();
+  }
+
+  showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+  }
 }
-function drawWorld(s){
- // base grass diamond
- poly(s,[[0,0],[W,0],[W,H],[0,H]],0x83bd78,0x5d9c69,8);
- // subtle isometric lawn tiles
- for(let y=0;y<H;y+=80)for(let x=0;x<W;x+=80){const p=iso(x,y);const q=iso(x+80,y);const r=iso(x+80,y+80);const t=iso(x,y+80);const g=s.add.graphics();g.lineStyle(1,0x679f69,.18);g.strokePoints([p,q,r,t,p],false);world.add(g);}
- // park paths and plaza
- path(s,[[150,760],[520,700],[900,760],[1240,700],[1550,720],[1940,850],[2220,970]],0xd9d1b9,44);
- path(s,[[500,700],[450,980],[650,1210],[900,1320]],0xe9dfc6,34);
- path(s,[[1250,720],[1370,970],[1600,1100],[1900,1320]],0xe9dfc6,34);
- // zone lawns
- platform(s,1180,170,980,850,0x8acb83);
- platform(s,100,850,1000,620,0x72c7b2);
- platform(s,1250,940,1050,570,0x9cc7d6);
- label(s,1650,110,'ADVENTURE KINGDOM',0x28566a);
- label(s,470,850,'SPLASH BAY',0x176c78);
- label(s,1770,950,'WONDERDOME',0x385b75);
- // entrance and central plaza
- building(s,1110,690,250,180,0xf4c86d,'GRAND ENTRANCE',0xd88b51);
- // garden planters and trees
- for(let i=0;i<65;i++){const x=100+((i*173)%2180),y=80+((i*257)%1390);if((x>1120&&x<2220&&y<900)||(x<1120&&y>850)||(x>1250&&y>940))continue;tree(s,x,y,.75+(i%4)*.12);}
- for(let i=0;i<22;i++){const x=300+(i*97)%1850,y=730+(i%4)*28;flower(s,x,y);}
- // benches
- for(const [x,y] of [[980,740],[1260,820],[1080,930],[1380,890],[1000,1280],[2180,900]])bench(s,x,y);
- // path lights
- for(const [x,y] of [[700,680],[900,710],[1400,710],[2100,870],[1170,1040],[1420,1150]])lamp(s,x,y);
-}
-function poly(s,pts,fill,stroke=fill,lw=2){const g=s.add.graphics();g.fillStyle(fill,1);g.lineStyle(lw,stroke,1);g.fillPoints(pts,true);g.strokePoints([...pts,pts[0]],false);world.add(g);return g;}
-function platform(s,x,y,w,h,color){const p=[iso(x,y),iso(x+w,y),iso(x+w,y+h),iso(x,y+h)];poly(s,p,color,0x679b73,4);}
-function path(s,points,color,width){const g=s.add.graphics();g.lineStyle(width+7,0xb5aa92,1);const p=points.map(([x,y])=>iso(x,y));g.strokePoints(p,false);g.lineStyle(width,color,1);g.strokePoints(p,false);world.add(g);}
-function label(s,x,y,text,color=0x31566a){const p=iso(x,y);const t=s.add.text(p.x,p.y,text,{fontFamily:'DM Sans',fontSize:'15px',fontStyle:'800',color:'#'+color.toString(16).padStart(6,'0'),letterSpacing:2,stroke:'#ffffff',strokeThickness:4}).setOrigin(.5);world.add(t);}
-function tree(s,x,y,k=1){const p=iso(x,y);const c=s.add.container(p.x,p.y);const g=s.add.graphics();g.fillStyle(0x527b51,.25);g.fillEllipse(0,7,38*k,15*k);g.fillStyle(0x805d43);g.fillRoundedRect(-4*k,-26*k,8*k,30*k,3);g.fillStyle([0x3d9667,0x5aa66d,0x78b66b][Math.floor(Math.random()*3)]);g.fillCircle(0,-37*k,19*k);g.fillCircle(-12*k,-30*k,13*k);g.fillCircle(12*k,-30*k,13*k);c.add(g);world.add(c);}
-function flower(s,x,y){const p=iso(x,y);const g=s.add.graphics();g.fillStyle(0x4b8c53);g.fillEllipse(p.x,p.y,16,7);for(let i=0;i<5;i++){const a=i*Math.PI*2/5;g.fillStyle([0xffc9dd,0xffd66e,0xffffff][i%3]);g.fillCircle(p.x+Math.cos(a)*4,p.y+Math.sin(a)*3,2.7);}world.add(g);}
-function bench(s,x,y){const p=iso(x,y);const g=s.add.graphics();g.fillStyle(0x75533e);g.fillRoundedRect(p.x-12,p.y-8,24,5,2);g.fillRect(p.x-10,p.y-3,3,9);g.fillRect(p.x+7,p.y-3,3,9);world.add(g);}
-function lamp(s,x,y){const p=iso(x,y);const g=s.add.graphics();g.lineStyle(3,0x526c73);g.lineBetween(p.x,p.y,p.x,p.y-35);g.fillStyle(0xffe8a0);g.fillCircle(p.x,p.y-37,5);world.add(g);}
-function building(s,x,y,w,h,color,name,roof=0x4c8190){const p=iso(x,y);const c=s.add.container(p.x,p.y);const g=s.add.graphics();g.fillStyle(0x47606a,.22);g.fillEllipse(0,10,w*.75,24);g.fillStyle(color);g.fillPoints([{x:-w*.42,y:-h*.28},{x:0,y:-h*.52},{x:w*.42,y:-h*.28},{x:w*.42,y:h*.2},{x:0,y:h*.42},{x:-w*.42,y:h*.2}],true);g.lineStyle(3,0x46616a);g.strokePoints([{x:-w*.42,y:-h*.28},{x:0,y:-h*.52},{x:w*.42,y:-h*.28},{x:w*.42,y:h*.2},{x:0,y:h*.42},{x:-w*.42,y:h*.2},{x:-w*.42,y:-h*.28}],false);g.fillStyle(roof);g.fillPoints([{x:-w*.48,y:-h*.28},{x:0,y:-h*.58},{x:w*.48,y:-h*.28},{x:0,y:-h*.03}],true);for(let i=0;i<3;i++){g.fillStyle(0xbde5e8);g.fillRoundedRect(-w*.3+i*w*.22,-h*.13,13,17,3);}g.fillStyle(0x6b4b3b);g.fillRoundedRect(-8,h*.08,16,27,3);c.add(g);const t=s.add.text(0,-h*.65,name,{fontFamily:'DM Sans',fontSize:'11px',fontStyle:'800',color:'#24495a',stroke:'#ffffff',strokeThickness:4}).setOrigin(.5);c.add(t);world.add(c);}
-function drawAttraction(s,a){
- const p=iso(a.x,a.y),g=s.add.graphics();g.fillStyle(0x405d60,.18);g.fillEllipse(p.x,p.y+12,130,40);
- if(a.type==='coaster'){
-  // elevated track loop with supports
-  const pts=[];for(let i=0;i<=70;i++){const t=i/70*Math.PI*2;const x=a.x+Math.cos(t)*210;const y=a.y+Math.sin(t)*115;pts.push(iso(x,y,70+Math.sin(t*2)*35));}
-  const pg=s.add.graphics();pg.lineStyle(13,0x45566a,1);pg.strokePoints(pts,false);pg.lineStyle(7,0xe65b5e,1);pg.strokePoints(pts,false);world.add(pg);
-  for(let i=0;i<10;i++){const t=i/10*Math.PI*2;const q=iso(a.x+Math.cos(t)*210,a.y+Math.sin(t)*115);const b=iso(a.x+Math.cos(t)*210,a.y+Math.sin(t)*115,70+Math.sin(t*2)*35);const st=s.add.graphics();st.lineStyle(4,0xe8e4d8);st.lineBetween(q.x,q.y,b.x,b.y);world.add(st);}
-  label(s,a.x,a.y-175,'SKY DRAGON');
- }else if(a.type==='ferris'){
-  const c=s.add.container(p.x,p.y-95);const wheel=s.add.container(0,0);const wg=s.add.graphics();wg.lineStyle(7,0x536779);wg.strokeCircle(0,0,72);wg.lineStyle(3,0xffffff);wg.strokeCircle(0,0,66);for(let i=0;i<12;i++){const t=i*Math.PI/6;wg.lineBetween(0,0,Math.cos(t)*70,Math.sin(t)*70);wg.fillStyle([0xff7f91,0xffce64,0x59b9db,0x83cba6][i%4]);wg.fillRoundedRect(Math.cos(t)*70-7,Math.sin(t)*70-5,14,11,3);}wheel.add(wg);c.add(wheel);const legs=s.add.graphics();legs.lineStyle(8,0x526779);legs.lineBetween(-8,0,-35,120);legs.lineBetween(8,0,35,120);legs.lineStyle(5,0x526779);legs.lineBetween(-35,120,35,120);c.add(legs);s.tweens.add({targets:wheel,angle:360,duration:24000,repeat:-1});world.add(c);a.wheel=wheel;label(s,a.x,a.y-210,'WONDER WHEEL');
- }else if(a.type==='carousel'){
-  const c=s.add.container(p.x,p.y);const q=s.add.graphics();q.fillStyle(0xf5d16b);q.fillEllipse(0,0,104,42);q.lineStyle(5,0x9d6950);q.strokeEllipse(0,0,104,42);q.fillStyle(0xe77d9b);q.fillPoints([{x:-47,y:-5},{x:0,y:-75},{x:47,y:-5}],true);q.fillStyle(0xffe5a5);q.fillCircle(0,-42,8);for(let i=0;i<6;i++){q.lineStyle(3,0xffffff);q.lineBetween(-38+i*15,-8,-38+i*15,-48);}c.add(q);s.tweens.add({targets:c,angle:360,duration:18000,repeat:-1});world.add(c);
- }else if(a.type==='bumper'){
-  const q=s.add.graphics();q.fillStyle(0x6b8ea0);q.fillRoundedRect(p.x-85,p.y-45,170,90,16);q.lineStyle(5,0xffffff);q.strokeRoundedRect(p.x-85,p.y-45,170,90,16);for(let i=0;i<5;i++){q.fillStyle([0xff788a,0x61c3da,0xffd166][i%3]);q.fillCircle(p.x-55+i*28,p.y-5,11);}world.add(q);
- }else if(a.type==='slides'){
-  const q=s.add.graphics();q.fillStyle(0xf0c878);q.fillRoundedRect(p.x-35,p.y-65,70,110,12);q.lineStyle(17,0x4d9de0);q.beginPath();q.moveTo(p.x-5,p.y-60);q.lineTo(p.x-55,p.y-20);q.lineTo(p.x+48,p.y+8);q.lineTo(p.x+15,p.y+57);q.strokePath();q.lineStyle(12,0xf1bd4e);q.beginPath();q.moveTo(p.x+22,p.y-60);q.lineTo(p.x+65,p.y-15);q.lineTo(p.x-15,p.y+18);q.lineTo(p.x-35,p.y+57);q.strokePath();world.add(q);
- }else if(a.type==='pool'||a.type==='lazy'){
-  const q=s.add.graphics();q.fillStyle(0xe7d5ae);q.fillRoundedRect(p.x-105,p.y-48,210,96,32);q.fillStyle(0x4dbed2);q.fillRoundedRect(p.x-94,p.y-38,188,76,28);q.lineStyle(2,0xb8f1f3,.8);for(let i=0;i<4;i++)q.lineBetween(p.x-65,p.y-20+i*13,p.x+65,p.y-20+i*13);world.add(q);
- }else if(a.type==='arcade'||a.type==='softplay'||a.type==='trampoline'){
-  building(s,a.x,a.y,220,130,a.type==='arcade'?0x9c8bd3:a.type==='softplay'?0xf0a4b5:0x83c9bd,a.name.toUpperCase(),0x516b89);
-  const q=s.add.graphics();if(a.type==='arcade'){for(let i=0;i<4;i++){q.fillStyle([0x53c5d7,0xf18ca7,0xffc65f,0x8ed1a9][i]);q.fillRoundedRect(p.x-60+i*34,p.y-10,24,33,4);q.fillStyle(0x284b60);q.fillRect(p.x-56+i*34,p.y-5,16,11);}}else{q.fillStyle(0xf8d26b);q.fillRoundedRect(p.x-55,p.y-20,110,44,13);q.lineStyle(4,0xffffff);q.strokeRoundedRect(p.x-55,p.y-20,110,44,13);}world.add(q);
- }
- const nam=s.add.text(p.x,p.y+48,a.name,{fontFamily:'DM Sans',fontSize:'10px',fontStyle:'800',color:'#284c5c',stroke:'#ffffff',strokeThickness:4}).setOrigin(.5);world.add(nam);
-}
-function makeActor(s,data,guest){
- const p=iso(data.x,data.y);const c=s.add.container(p.x,p.y);const shadow=s.add.ellipse(0,2,25*data.scale,10*data.scale,0x36514c,.2);c.add(shadow);
- const body=s.add.container(0,0);const g=s.add.graphics();const k=data.scale;
- // legs, torso, head with soft outlines
- g.fillStyle(0x34485a);g.fillRoundedRect(-7*k,2*k,5*k,13*k,2);g.fillRoundedRect(2*k,2*k,5*k,13*k,2);
- g.fillStyle(data.pants||0x34485a);g.fillRoundedRect(-8*k,0,7*k,13*k,3);g.fillRoundedRect(1*k,0,7*k,13*k,3);
- g.fillStyle(data.shirt);g.fillRoundedRect(-10*k,-17*k,20*k,22*k,6);
- g.lineStyle(1.5,0x34485a,.65);g.strokeRoundedRect(-10*k,-17*k,20*k,22*k,6);
- // arms
- g.fillStyle(data.skin);g.fillRoundedRect(-14*k,-14*k,5*k,17*k,3);g.fillRoundedRect(9*k,-14*k,5*k,17*k,3);
- // neck and head
- g.fillStyle(data.skin);g.fillRoundedRect(-4*k,-23*k,8*k,8*k,3);g.fillStyle(data.skin);g.fillCircle(0,-31*k,10*k);
- if(data.hijab){g.fillStyle(data.hijab);g.fillCircle(0,-32*k,11*k);g.fillRoundedRect(-10*k,-32*k,20*k,19*k,8);g.fillStyle(data.skin);g.fillCircle(0,-28*k,7*k);}
- else{g.fillStyle(data.hair||0x29252b);g.fillEllipse(0,-39*k,18*k,9*k);g.fillCircle(-7*k,-35*k,4*k);}
- g.fillStyle(0x263b48);g.fillCircle(-3*k,-31*k,1.2*k);g.fillCircle(3*k,-31*k,1.2*k);g.lineStyle(1,0x8c4f50);g.beginPath();g.arc(0,-28*k,3*k,.2,Math.PI-.2);g.strokePath();
- body.add(g);c.add(body);
- const bubble=s.add.container(0,-58*k);const bg=s.add.graphics();bg.fillStyle(0xffffff,.96);bg.lineStyle(1,0xd6e3e8);bg.fillRoundedRect(-43,-15,86,24,8);bg.fillTriangle(-4,9,4,9,0,15);bubble.add(bg);const txt=s.add.text(0,-3,'…',{fontFamily:'DM Sans',fontSize:'9px',fontStyle:'700',color:'#355466'}).setOrigin(.5);bubble.add(txt);bubble.setVisible(false);c.add(bubble);
- world.add(c);return {container:c,body,bubble,bubbleText:txt,data,guest,walk:Math.random()*6,homeX:data.x,homeY:data.y};
-}
-function updateActor(a,dt){
- const d=a.data;if(d.goal==='ride'){d.rideTimer=(d.rideTimer||0)-dt;if(d.rideTimer<=0){d.goal='walk';d.action='Just finished '+(d.rideName||'a ride');d.fun=Math.min(100,d.fun+20);d.energy=Math.max(0,d.energy-7);d.target=null;showBubble(a,'That was amazing!');} }
- if(!d.target&&d.goal!=='ride'){
-  if(!a.guest)chooseActivity(d);else if(Math.random()<.008){d.target={x:500+Math.random()*1400,y:550+Math.random()*850};}
- }
- if(d.target&&d.goal!=='ride'){
-  const dx=d.target.x-d.x,dy=d.target.y-d.y,dist=Math.hypot(dx,dy),step=(d.speed||58)*dt;
-  if(dist<12){d.x=d.target.x;d.y=d.target.y;d.target=null;arrive(a);}
-  else{d.x+=dx/dist*Math.min(step,dist);d.y+=dy/dist*Math.min(step,dist);a.walk+=dt*10;a.body.y=Math.sin(a.walk)*1.8;}
- }
- if(d.goal==='swim'){d.x+=Math.sin(performance.now()/450+a.walk)*.18;d.fun=Math.min(100,d.fun+dt*1.1);if(Math.random()<dt*.7)waterRipple(d.x,d.y);}
- d.energy=Math.max(0,d.energy-dt*.09);d.hunger=Math.max(0,d.hunger-dt*.07);
- if(d.goal!=='ride'&&d.goal!=='swim'&&d.goal!=='rest')d.fun=Math.max(20,d.fun-dt*.025);
- const p=iso(d.x,d.y);a.container.setPosition(p.x,p.y);a.container.setDepth(p.y+10);
- if(d.speechTimer){d.speechTimer-=dt;if(d.speechTimer<=0)a.bubble.setVisible(false);}
-}
-function chooseActivity(d){
- const pick=(arr)=>arr[Math.floor(Math.random()*arr.length)];
- let options;
- if(d.id==='isaac')options=['slides','coaster','softplay','carousel','pool'];
- else if(d.id==='hayyan')options=['slides','softplay','bumper','pool','trampoline'];
- else if(d.id==='anis')options=['pool','lazy','carousel','arcade','ferris'];
- else options=['coaster','ferris','pool','bumper','carousel'];
- const a=attractions.find(x=>x.id===pick(options));
- d.target={x:a.x+(Math.random()-.5)*55,y:a.y+55};d.goal='walk';d.rideName=a.name;d.action='Heading to '+a.name;d.targetRide=a.id;
-}
-function arrive(a){
- const d=a.data;if(d.targetRide){const ride=attractions.find(x=>x.id===d.targetRide);if(ride){d.goal=ride.type==='pool'||ride.type==='lazy'?'swim':'ride';d.rideTimer=ride.type==='pool'||ride.type==='lazy'?10:7+Math.random()*5;d.action=ride.type==='pool'?'Swimming at '+ride.name:'Enjoying '+ride.name;d.rideName=ride.name;d.targetRide=null;sim.rides++;showBubble(a,ride.type==='pool'?'Splash!':'Woohoo!');return;}}
- d.goal='rest';d.restTimer=3;d.action='Taking a little break';}
-function showBubble(a,msg){a.bubbleText.setText(msg);a.bubble.setVisible(true);a.data.speechTimer=2.6;}
-function waterRipple(x,y){const p=iso(x,y);const e=scene.add.ellipse(p.x,p.y,7,3,0xffffff,.5);world.add(e);scene.tweens.add({targets:e,scaleX:3,scaleY:2,alpha:0,duration:650,onComplete:()=>e.destroy()});}
-function selectCharacter(id){sim.selected=id;const d=family.find(x=>x.id===id);if(!d)return;scene.cameras.main.startFollow(actors.find(a=>a.data.id===id).container,true,.06,.06);scene.cameras.main.setZoom(.92);renderDock();updateInspector();toast('Following '+d.name);}
-function setZone(z){sim.zone=z;const v=zones[z];scene.cameras.main.stopFollow();scene.cameras.main.setZoom(v.zoom);const p=iso(v.x,v.y);scene.cameras.main.centerOn(p.x,p.y);document.querySelectorAll('[data-zone]').forEach(b=>b.classList.toggle('active',b.dataset.zone===z));document.getElementById('zoneTitle').textContent=v.title;document.getElementById('zoneDesc').textContent=v.desc;}
-function createControls(s){
- document.querySelectorAll('[data-zone]').forEach(b=>b.onclick=()=>{sim.selected=null;renderDock();updateInspector();setZone(b.dataset.zone);});
- document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>{sim.speed=Number(b.dataset.speed);sim.paused=false;document.getElementById('pause').textContent='Ⅱ';document.querySelectorAll('[data-speed]').forEach(x=>x.classList.toggle('active',x===b));});
- document.getElementById('pause').onclick=()=>{sim.paused=!sim.paused;document.getElementById('pause').textContent=sim.paused?'▶':'Ⅱ';};
- document.getElementById('overview').onclick=()=>{sim.selected=null;renderDock();updateInspector();setZone('all');};
-}
-function renderDock(){const el=document.getElementById('familyDock');el.innerHTML='';family.forEach(d=>{const b=document.createElement('button');b.className='familycard'+(sim.selected===d.id?' selected':'');const face=d.id==='anis'?'👩🏻‍🦱':d.id==='izmi'?'🧔🏻':d.id==='isaac'?'👦🏻':'👦🏼';b.innerHTML=`<div class="face" style="background:${d.color}">${face}</div><b>${d.name}</b><small>${d.action.replace('Heading to ','Going to ')}</small>`;b.onclick=()=>selectCharacter(d.id);el.appendChild(b);});}
-function updateInspector(){const el=document.getElementById('inspector'),d=family.find(x=>x.id===sim.selected);if(!d){el.classList.remove('show');return;}el.classList.add('show');document.getElementById('insAvatar').textContent=d.id==='anis'?'👩🏻‍🦱':d.id==='izmi'?'🧔🏻':'👦🏻';document.getElementById('insName').textContent=d.name;document.getElementById('insRole').textContent=d.role+' · Age '+d.age;for(const [key,id] of [['energy','energy'],['fun','fun'],['hunger','hunger']]){document.getElementById(key+'Val').textContent=Math.round(d[id])+'%';document.getElementById(key+'Bar').style.width=d[id]+'%';}document.getElementById('insAction').textContent=d.action;}
-function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(sim.toastTimer);sim.toastTimer=setTimeout(()=>el.classList.remove('show'),1800);}
-function update(time,delta){
- const dt=Math.min(delta/1000,.05)*(sim.paused?0:sim.speed);if(dt<=0)return;
- sim.minutes+=dt*2.1;if(sim.minutes>=1440){sim.minutes-=1440;sim.day++;}
- const hh=Math.floor(sim.minutes/60),mm=Math.floor(sim.minutes%60),ampm=hh>=12?'PM':'AM',hour=hh%12||12;
- document.getElementById('clock').textContent=`${hour}:${String(mm).padStart(2,'0')} ${ampm}`;
- document.getElementById('day').textContent=`DAY ${sim.day} · ${DAY[(sim.day-1)%7].toUpperCase()}`;
- document.getElementById('weatherIcon').textContent=(hh>=19||hh<6)?'🌙':'☀️';
- actors.forEach(a=>updateActor(a,dt));guestActors.forEach(a=>updateActor(a,dt));
- if(time-lastUi>350){lastUi=time;document.getElementById('guestCount').textContent=14+family.length;document.getElementById('rideCount').textContent=attractions.length;updateInspector();renderDock();}
-}
+
+new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: 'game',
+  backgroundColor: '#7cb875',
+  scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
+  render: { antialias: true, roundPixels: false },
+  scene: [ParkScene]
+});
 })();
 </script>
 </body>
